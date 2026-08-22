@@ -1,0 +1,79 @@
+<!--
+******************************************************************
+ PROJECT      : Social Media Analytics Center
+ MODULE       : Frontend - Web App
+ FILE         : input-import.html
+ VERSION      : v1.0.0
+ AUTHOR       : Jimmy Team (dibantu Claude)
+ CREATED      : 2026-08-19
+ LAST UPDATE  : 2026-08-19
+
+ DESCRIPTION
+ ------------------------------------------------------------------
+ Halaman Import Data — tempel teks mentah Instagram Insight,
+ parse & preview, lalu simpan ke database. Dipecah dari
+ index.html v1.0.0 (dulu tab "Import (Paste Data)").
+
+ VERSION HISTORY
+ ------------------------------------------------------------------
+ v1.0.0
+ - Initial Release.
+
+ DEPENDENCIES
+ ------------------------------------------------------------------
+ Required : css/app.css, js/api.js, js/common.js, js/input-import.js
+******************************************************************
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Data — Social Media Analytics Center</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">●</span>
+    <span class="brand-text">Social Media Analytics Center</span>
+  </div>
+  <nav class="page-nav">
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="input-import.html" class="nav-link active">Import Data</a>
+    <a href="input-manual.html" class="nav-link">Input Manual</a>
+    <a href="input-pcp.html" class="nav-link">Khusus PCP</a>
+  </nav>
+</header>
+
+<main>
+  <section class="page">
+    <div class="controls-bar">
+      <label>Account
+        <select id="i-account"></select>
+      </label>
+      <label>Period Lama
+        <select id="i-period-old"></select>
+      </label>
+      <label>Period Baru
+        <select id="i-period-new"></select>
+      </label>
+    </div>
+
+    <p class="hint">Tempel data mentah dari Instagram Insight persis format biasa (label lalu dua kolom angka, dipisah tab).</p>
+    <textarea id="i-raw" rows="16" placeholder="TAYANGAN&#9;5178&#9;9912&#10;FOLOWER&#9;2993&#9;4312&#10;..."></textarea>
+    <div class="button-row">
+      <button id="i-preview" class="btn-secondary">Parse &amp; Preview</button>
+      <button id="i-save" class="btn-primary" disabled>Simpan</button>
+    </div>
+    <div id="i-preview-area"></div>
+    <div id="i-status" class="status-msg"></div>
+  </section>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/input-import.js"></script>
+</body>
+</html>

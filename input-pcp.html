@@ -1,0 +1,88 @@
+<!--
+******************************************************************
+ PROJECT      : Social Media Analytics Center
+ MODULE       : Frontend - Web App
+ FILE         : input-pcp.html
+ VERSION      : v1.0.0
+ AUTHOR       : Jimmy Team (dibantu Claude)
+ CREATED      : 2026-08-19
+ LAST UPDATE  : 2026-08-19
+
+ DESCRIPTION
+ ------------------------------------------------------------------
+ Halaman Khusus PCP — input persentase Pemirsa per Jenis Konten
+ dan Demografi Usia+Gender untuk akun Paradise Center Point (PCP),
+ dihitung otomatis oleh backend. Dipecah dari index.html v1.0.0
+ (dulu tab "Khusus PCP").
+
+ VERSION HISTORY
+ ------------------------------------------------------------------
+ v1.0.0
+ - Initial Release.
+
+ DEPENDENCIES
+ ------------------------------------------------------------------
+ Required : css/app.css, js/api.js, js/common.js, js/input-pcp.js
+******************************************************************
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khusus PCP — Social Media Analytics Center</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">●</span>
+    <span class="brand-text">Social Media Analytics Center</span>
+  </div>
+  <nav class="page-nav">
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="input-import.html" class="nav-link">Import Data</a>
+    <a href="input-manual.html" class="nav-link">Input Manual</a>
+    <a href="input-pcp.html" class="nav-link active">Khusus PCP</a>
+  </nav>
+</header>
+
+<main>
+  <section class="page">
+    <p class="hint">Khusus akun PCP (Paradise Center Point) — isi persentase, sistem hitung angka akhirnya otomatis.</p>
+    <div class="controls-bar">
+      <label>Period
+        <select id="p-period"></select>
+      </label>
+    </div>
+
+    <h3>Pemirsa per Jenis Konten</h3>
+    <table class="pcp-table" id="p-reach-table">
+      <thead><tr><th>Jenis Konten</th><th>% dari Total Pemirsa</th><th>% Follower</th><th>% Non-Follower</th></tr></thead>
+      <tbody>
+        <tr><td>STORY</td><td><input type="number" step="0.1" data-type="STORY" data-field="content_percent"></td><td><input type="number" step="0.1" data-type="STORY" data-field="follower_percent"></td><td><input type="number" step="0.1" data-type="STORY" data-field="nonfollower_percent"></td></tr>
+        <tr><td>REELS</td><td><input type="number" step="0.1" data-type="REELS" data-field="content_percent"></td><td><input type="number" step="0.1" data-type="REELS" data-field="follower_percent"></td><td><input type="number" step="0.1" data-type="REELS" data-field="nonfollower_percent"></td></tr>
+        <tr><td>FEED</td><td><input type="number" step="0.1" data-type="FEED" data-field="content_percent"></td><td><input type="number" step="0.1" data-type="FEED" data-field="follower_percent"></td><td><input type="number" step="0.1" data-type="FEED" data-field="nonfollower_percent"></td></tr>
+      </tbody>
+    </table>
+    <p class="hint">Catatan: isi dulu Total Pemirsa akun PCP lewat halaman Input Manual (sheet REACH_BY_TYPE, content_type=PEMIRSA, audience_type=TOTAL) sebelum simpan tabel ini.</p>
+    <button id="p-save-reach" class="btn-secondary">Hitung &amp; Simpan Pemirsa</button>
+
+    <h3>Demografi Usia + Gender</h3>
+    <table class="pcp-table" id="p-audience-table">
+      <thead><tr><th>Gender</th><th>% Gender</th><th>Rentang Usia</th><th>% Usia dalam Gender</th></tr></thead>
+      <tbody id="p-audience-rows"></tbody>
+    </table>
+    <p class="hint">Catatan: isi dulu Total Follower akun PCP lewat halaman Input Manual (sheet FOLLOWER_GROWTH) sebelum simpan tabel ini.</p>
+    <button id="p-save-audience" class="btn-secondary">Hitung &amp; Simpan Demografi</button>
+
+    <div id="p-status" class="status-msg"></div>
+  </section>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/input-pcp.js"></script>
+</body>
+</html>

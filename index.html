@@ -1,0 +1,81 @@
+<!--
+******************************************************************
+ PROJECT      : Social Media Analytics Center
+ MODULE       : Frontend - Web App
+ FILE         : index.html
+ VERSION      : v1.1.0
+ AUTHOR       : Jimmy Team (dibantu Claude)
+ CREATED      : 2026-08-18
+ LAST UPDATE  : 2026-08-19
+
+ DESCRIPTION
+ ------------------------------------------------------------------
+ Halaman Dashboard — laporan Performa Utama, Follower Growth,
+ Reach, Engagement, Konten Populer, Demografi, dan Jam Aktif.
+
+ VERSION HISTORY
+ ------------------------------------------------------------------
+ v1.0.0
+ - Initial Release. Satu file berisi Dashboard + Input (tab JS).
+
+ v1.1.0
+ - Dipecah jadi halaman mandiri. index.html sekarang HANYA berisi
+   Dashboard. Input Data dipindah ke 3 halaman terpisah:
+   input-import.html, input-manual.html, input-pcp.html.
+   Navigasi pakai link <a> asli antar halaman, bukan tab JS.
+
+ DEPENDENCIES
+ ------------------------------------------------------------------
+ Required : css/app.css, js/api.js, js/common.js, js/dashboard.js,
+            Chart.js (CDN)
+******************************************************************
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Social Media Analytics Center</title>
+<link rel="stylesheet" href="css/app.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">●</span>
+    <span class="brand-text">Social Media Analytics Center</span>
+  </div>
+  <nav class="page-nav">
+    <a href="index.html" class="nav-link active">Dashboard</a>
+    <a href="input-import.html" class="nav-link">Import Data</a>
+    <a href="input-manual.html" class="nav-link">Input Manual</a>
+    <a href="input-pcp.html" class="nav-link">Khusus PCP</a>
+  </nav>
+</header>
+
+<main>
+  <section class="page">
+    <div class="controls-bar">
+      <label>Account
+        <select id="d-account"></select>
+      </label>
+      <label>Period
+        <select id="d-period"></select>
+      </label>
+      <label>Compare
+        <select id="d-compare"></select>
+      </label>
+      <button id="d-load" class="btn-primary">Lihat Analytics</button>
+    </div>
+
+    <div id="d-status" class="status-msg"></div>
+    <div id="d-content" class="dashboard-grid"></div>
+  </section>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!--
+******************************************************************
+ PROJECT      : Social Media Analytics Center
+ MODULE       : Frontend - Web App
+ FILE         : input-manual.html
+ VERSION      : v1.0.0
+ AUTHOR       : Jimmy Team (dibantu Claude)
+ CREATED      : 2026-08-19
+ LAST UPDATE  : 2026-08-19
+
+ DESCRIPTION
+ ------------------------------------------------------------------
+ Halaman Input Manual — form satu baris untuk sheet MAIN,
+ REACH_BY_TYPE, ENGAGEMENT, atau ACTIVITY. Dipecah dari index.html
+ v1.0.0 (dulu tab "Input Manual").
+
+ VERSION HISTORY
+ ------------------------------------------------------------------
+ v1.0.0
+ - Initial Release.
+
+ DEPENDENCIES
+ ------------------------------------------------------------------
+ Required : css/app.css, js/api.js, js/common.js, js/input-manual.js
+******************************************************************
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input Manual — Social Media Analytics Center</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">●</span>
+    <span class="brand-text">Social Media Analytics Center</span>
+  </div>
+  <nav class="page-nav">
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="input-import.html" class="nav-link">Import Data</a>
+    <a href="input-manual.html" class="nav-link active">Input Manual</a>
+    <a href="input-pcp.html" class="nav-link">Khusus PCP</a>
+  </nav>
+</header>
+
+<main>
+  <section class="page">
+    <div class="controls-bar">
+      <label>Account
+        <select id="m-account"></select>
+      </label>
+      <label>Period
+        <select id="m-period"></select>
+      </label>
+      <label>Sheet Tujuan
+        <select id="m-sheet">
+          <option value="MAIN">MAIN</option>
+          <option value="REACH_BY_TYPE">REACH_BY_TYPE</option>
+          <option value="ENGAGEMENT">ENGAGEMENT</option>
+          <option value="ACTIVITY">ACTIVITY</option>
+        </select>
+      </label>
+    </div>
+    <div id="m-fields" class="manual-fields"></div>
+    <div class="button-row">
+      <button id="m-save" class="btn-primary">Simpan</button>
+    </div>
+    <div id="m-status" class="status-msg"></div>
+  </section>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/input-manual.js"></script>
+</body>
+</html>
