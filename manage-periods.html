@@ -1,0 +1,82 @@
+<!--
+******************************************************************
+ PROJECT      : Social Media Analytics Center
+ MODULE       : Frontend - Web App
+ FILE         : manage-periods.html
+ VERSION      : v1.0.0
+ AUTHOR       : Jimmy Team (dibantu Claude)
+ CREATED      : 2026-08-19
+ LAST UPDATE  : 2026-08-19
+
+ DESCRIPTION
+ ------------------------------------------------------------------
+ Halaman Kelola Periode — tambah periode Mingguan/Bulanan cukup
+ dengan memilih satu tanggal lewat date-picker. Sistem otomatis
+ menghitung rentang tanggal, period_id, dan nama tampilannya,
+ lalu menyimpannya ke sheet PERIODS. Tidak perlu edit sheet manual.
+
+ VERSION HISTORY
+ ------------------------------------------------------------------
+ v1.0.0
+ - Initial Release.
+
+ DEPENDENCIES
+ ------------------------------------------------------------------
+ Required : css/app.css, js/api.js, js/common.js, js/manage-periods.js
+******************************************************************
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Periode — Social Media Analytics Center</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">●</span>
+    <span class="brand-text">Social Media Analytics Center</span>
+  </div>
+  <nav class="page-nav">
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="input-import.html" class="nav-link">Import Data</a>
+    <a href="input-manual.html" class="nav-link">Input Manual</a>
+    <a href="input-pcp.html" class="nav-link">Khusus PCP</a>
+    <a href="manage-periods.html" class="nav-link active">Kelola Periode</a>
+  </nav>
+</header>
+
+<main>
+  <section class="page">
+    <p class="hint">Pilih satu tanggal saja — sistem otomatis menghitung rentang Senin-Minggu (Mingguan) atau tanggal 1 s/d akhir bulan (Bulanan), lalu membuatkan nama periodenya.</p>
+
+    <div class="controls-bar">
+      <label>Tanggal
+        <input type="date" id="mp-date">
+      </label>
+      <label>Jenis Periode
+        <select id="mp-type">
+          <option value="WEEKLY">Mingguan</option>
+          <option value="MONTHLY">Bulanan</option>
+        </select>
+      </label>
+      <button id="mp-add" class="btn-primary">Tambah Periode</button>
+    </div>
+    <div id="mp-status" class="status-msg"></div>
+
+    <h3>Daftar Periode Tersimpan</h3>
+    <table class="preview-table" id="mp-list-table">
+      <thead><tr><th>Nama Periode</th><th>Jenis</th><th>Mulai</th><th>Selesai</th><th>ID</th></tr></thead>
+      <tbody id="mp-list-body"></tbody>
+    </table>
+  </section>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/common.js"></script>
+<script src="js/manage-periods.js"></script>
+</body>
+</html>
