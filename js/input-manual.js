@@ -2,21 +2,19 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : input-manual.js
- * VERSION      : v2.0.0
+ * VERSION      : v2.1.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-19
  * LAST UPDATE  : 2026-08-19
  *
  * DESCRIPTION
  * ----------------------------------------------------------------
- * Logika halaman Input Manual (input-manual.html) versi REDESIGN
- * TOTAL: satu form utuh berisi semua field (bukan per-baris via
- * dropdown Sheet Tujuan). Field Reach Follower/Non-Follower,
- * Interaksi Follower/Non-Follower, Gender, dan Rentang Usia punya
- * toggle Angka/Persentase — kalau Persentase dipilih, nilai
- * dikonversi ke angka asli di sisi client sebelum dikirim,
- * memakai base value dari field lain di form yang sama (Tayangan,
- * Interaksi, Total Follower).
+ * Logika halaman Input Manual (input-manual.html) — form lengkap
+ * satu periode. Field Reach/Interaksi/Gender/Usia punya toggle
+ * Angka/Persentase, dikonversi ke angka asli di client sebelum
+ * dikirim. Konten Populer sekarang membawa Link + insight per
+ * konten (Like/Komen/Posting Ulang/Bagikan/Simpan). Ada section
+ * baru Lokasi Populer (5 negara/lokasi audiens terpopuler).
  ******************************************************************/
 
 /******************************************************************
@@ -25,14 +23,23 @@
  *
  * v1.0.0
  * - Initial Release. Form per-baris via dropdown Sheet Tujuan.
- * - renderManualFields, handleSaveManual, initInputManualPage.
  *
  * v2.0.0 — REDESIGN TOTAL
- * - Semua fungsi lama dihapus, diganti struktur form penuh:
- *   buildMainPayload, buildReachByTypePayload, buildTopContentPayload,
- *   buildEngagementPayload, buildGrowthAndAudiencePayload,
- *   buildActivityPayload, validateForm, handleSaveAll.
- * - Memakai action backend baru saveManualFull (bukan saveManual).
+ * - Diganti jadi form penuh: buildMainPayload, buildReachByTypePayload,
+ *   buildTopContentPayload, buildEngagementPayload,
+ *   buildGrowthAndAudiencePayload, buildActivityPayload,
+ *   validateForm, handleSaveAll.
+ *
+ * v2.1.0
+ * - renderTopContentRows() dan buildTopContentPayload() dirombak:
+ *   field Tag diganti Link, ditambah 5 field insight per konten
+ *   (Like, Komen, Posting Ulang, Bagikan, Simpan).
+ * - Ditambahkan renderTopLocationRows() dan
+ *   buildTopLocationsPayload() untuk section baru Lokasi Populer.
+ * - handleSaveAll() menyertakan top_locations di payload.
+ * - Tidak ada perubahan pada buildEngagementPayload() dan bagian
+ *   Rentang Usia — ID field HTML tetap sama meskipun tampilannya
+ *   direstrukturisasi di input-manual.html v2.1.0.
  *
  ******************************************************************/
 
@@ -52,12 +59,19 @@
 /******************************************************************
  * CONSTANTS
  * ----------------------------------------------------------------
- * Jumlah baris tetap Konten Populer & Jam Aktif awal, daftar
- * jenis konten/metric Engagement, dan daftar rentang usia.
+ * Jumlah baris tetap Konten Populer, Lokasi Populer, & Jam Aktif
+ * awal, daftar jenis konten/metric Engagement, dan daftar rentang
+ * usia.
  ******************************************************************/
 
 const TOP_CONTENT_ROW_COUNT = 5;
+const TOP_LOCATION_ROW_COUNT = 5;
 const DEFAULT_ACTIVITY_ROW_COUNT = 5;
+
+const TOP_CONTENT_INSIGHT_METRICS = [
+  ['like', 'Like'], ['komen', 'Komen'], ['posting_ulang', 'Posting Ulang'],
+  ['bagikan', 'Bagikan'], ['simpan', 'Simpan']
+];
 
 const ENGAGEMENT_CONTENT_TYPE_KEYS = [['reels', 'REELS'], ['feed', 'FEED'], ['story', 'STORY'], ['live', 'LIVE']];
 const ENGAGEMENT_METRIC_KEYS = [['like', 'LIKE'], ['komen', 'KOMEN'], ['posting_ulang', 'POSTING_ULANG'], ['bagikan', 'BAGIKAN'], ['simpan', 'SIMPAN'], ['balasan', 'BALASAN']];
@@ -104,22 +118,49 @@ function getSelectedMode(radioGroupName) {
 /******************************************************************
  * DYNAMIC ROW RENDERING
  * ----------------------------------------------------------------
- * Fungsi pembuat baris Konten Populer (tetap 5) dan Jam Aktif
- * (dinamis, bisa ditambah/dihapus).
+ * Fungsi pembuat baris Konten Populer (tetap 5), Lokasi Populer
+ * (tetap 5), dan Jam Aktif (dinamis, bisa ditambah/dihapus).
  ******************************************************************/
 
 /******************************************************************
  * Function : renderTopContentRows()
- * Tujuan   : Merender 5 baris form Konten Populer (Judul + Tag).
+ * Tujuan   : Merender 5 blok form Konten Populer — Judul, Link,
+ *            dan 5 insight (Like/Komen/Posting Ulang/Bagikan/Simpan).
  ******************************************************************/
 function renderTopContentRows() {
   const container = document.getElementById('mf-top-content-rows');
-  let rowsHtml = '';
+  let blocksHtml = '';
   for (let rank = 1; rank <= TOP_CONTENT_ROW_COUNT; rank++) {
-    rowsHtml += `<div class="field-grid top-content-row">
+    const insightFieldsHtml = TOP_CONTENT_INSIGHT_METRICS.map(([metricKey, metricLabel]) =>
+      `<label>${metricLabel}<input type="number" id="mf-top-${metricKey}-${rank}"></label>`
+    ).join('');
+
+    blocksHtml += `
+      <div class="top-content-block">
+        <div class="top-content-header">
+          <span class="rank-label">#${rank}</span>
+          <label>Judul<input type="text" id="mf-top-title-${rank}"></label>
+          <label>Link<input type="text" id="mf-top-link-${rank}" placeholder="https://instagram.com/..."></label>
+        </div>
+        <div class="field-grid five-col">${insightFieldsHtml}</div>
+      </div>`;
+  }
+  container.innerHTML = blocksHtml;
+}
+
+/******************************************************************
+ * Function : renderTopLocationRows()
+ * Tujuan   : Merender 5 baris form Lokasi Populer — Nama Negara +
+ *            Persentase.
+ ******************************************************************/
+function renderTopLocationRows() {
+  const container = document.getElementById('mf-top-location-rows');
+  let rowsHtml = '';
+  for (let rank = 1; rank <= TOP_LOCATION_ROW_COUNT; rank++) {
+    rowsHtml += `<div class="field-grid top-location-row">
       <span class="rank-label">#${rank}</span>
-      <label>Judul<input type="text" id="mf-top-title-${rank}"></label>
-      <label>Tag<input type="text" id="mf-top-tag-${rank}"></label>
+      <label>Nama Negara<input type="text" id="mf-loc-name-${rank}"></label>
+      <label>Persentase (%)<input type="number" step="0.01" id="mf-loc-percent-${rank}"></label>
     </div>`;
   }
   container.innerHTML = rowsHtml;
@@ -226,15 +267,41 @@ function buildReachByTypePayload() {
 
 /******************************************************************
  * Function : buildTopContentPayload()
- * Tujuan   : Mengumpulkan 5 baris form Konten Populer, hanya baris
- *            yang Judul-nya diisi yang dikirim.
+ * Tujuan   : Mengumpulkan 5 blok form Konten Populer (Judul, Link,
+ *            insight Like/Komen/Posting Ulang/Bagikan/Simpan).
+ *            Hanya baris yang Judul-nya diisi yang dikirim.
  ******************************************************************/
 function buildTopContentPayload() {
   const rows = [];
   for (let rank = 1; rank <= TOP_CONTENT_ROW_COUNT; rank++) {
     const title = document.getElementById(`mf-top-title-${rank}`).value.trim();
-    const tag = document.getElementById(`mf-top-tag-${rank}`).value.trim();
-    if (title) rows.push({ rank, title, tag });
+    if (!title) continue;
+
+    const link = document.getElementById(`mf-top-link-${rank}`).value.trim();
+    const row = { rank, title, link };
+    TOP_CONTENT_INSIGHT_METRICS.forEach(([metricKey]) => {
+      const value = getInputValue(`mf-top-${metricKey}-${rank}`);
+      if (value !== null) row[metricKey] = value;
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+
+/******************************************************************
+ * Function : buildTopLocationsPayload()
+ * Tujuan   : Mengumpulkan 5 baris form Lokasi Populer (Nama Negara
+ *            + Persentase). Hanya baris yang nama negaranya diisi
+ *            yang dikirim.
+ ******************************************************************/
+function buildTopLocationsPayload() {
+  const rows = [];
+  for (let rank = 1; rank <= TOP_LOCATION_ROW_COUNT; rank++) {
+    const locationName = document.getElementById(`mf-loc-name-${rank}`).value.trim();
+    if (!locationName) continue;
+
+    const percentage = getInputValue(`mf-loc-percent-${rank}`);
+    rows.push({ rank, location_name: locationName, percentage: percentage === null ? '' : percentage });
   }
   return rows;
 }
@@ -242,7 +309,9 @@ function buildTopContentPayload() {
 /******************************************************************
  * Function : buildEngagementPayload()
  * Tujuan   : Mengumpulkan seluruh field Engagement (4 jenis konten
- *            x 6 metric) jadi array baris ENGAGEMENT.
+ *            x 6 metric) jadi array baris ENGAGEMENT. ID field
+ *            tidak berubah meskipun tampilan direstrukturisasi
+ *            jadi per-metrik di HTML v2.1.0.
  ******************************************************************/
 function buildEngagementPayload() {
   const rows = [];
@@ -391,6 +460,7 @@ async function handleSaveAll() {
     main: buildMainPayload(),
     reach_by_type: buildReachByTypePayload(),
     top_content: buildTopContentPayload(),
+    top_locations: buildTopLocationsPayload(),
     engagement: buildEngagementPayload(),
     follower_growth: growthAndAudience.followerGrowth,
     audience_age: growthAndAudience.audienceRows,
@@ -417,8 +487,8 @@ async function handleSaveAll() {
  * Function : initInputManualPage()
  * Tujuan   : Memuat master data (accounts/periods), mengisi
  *            dropdown Account/Period, merender baris dinamis
- *            (Konten Populer, Jam Aktif), lalu memasang event
- *            listener tombol Simpan Semua.
+ *            (Konten Populer, Lokasi Populer, Jam Aktif), lalu
+ *            memasang event listener tombol Simpan Semua.
  ******************************************************************/
 async function initInputManualPage() {
   const statusElement = document.getElementById('mf-status');
@@ -432,6 +502,7 @@ async function initInputManualPage() {
     }
 
     renderTopContentRows();
+    renderTopLocationRows();
     initActivityRows();
     document.getElementById('mf-save').addEventListener('click', handleSaveAll);
   } catch (error) {
