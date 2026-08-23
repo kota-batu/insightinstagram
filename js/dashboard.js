@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : dashboard.js
- * VERSION      : v1.3.0
+ * VERSION      : v1.3.1
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-18
  * LAST UPDATE  : 2026-08-19
@@ -34,6 +34,10 @@
  *   tetap otomatis muncul kalau field link diisi.
  * - Ditambahkan kartu baru renderTopLocationsCard() — daftar 5
  *   negara/lokasi audiens terpopuler.
+ *
+ * v1.3.1
+ * - Perbaikan istilah komentar: "negara" -> "kota" (menyesuaikan
+ *   label form Input Manual v2.1.1). Tidak ada perubahan kode.
  *
  ******************************************************************/
 
@@ -277,8 +281,8 @@ function renderTopContentCard(dashboardData) {
 
 /******************************************************************
  * Function : renderTopLocationsCard()
- * Tujuan   : Merender daftar 5 negara/lokasi audiens terpopuler
- *            beserta persentasenya.
+ * Tujuan   : Merender daftar 5 kota audiens terpopuler beserta
+ *            persentasenya.
  ******************************************************************/
 function renderTopLocationsCard(dashboardData) {
   const locations = dashboardData.top_locations || [];
