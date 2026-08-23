@@ -3,24 +3,14 @@
  PROJECT      : Social Media Analytics Center
  MODULE       : Frontend - Web App
  FILE         : input-manual.html
- VERSION      : v2.0.0
+ VERSION      : v2.1.0
  AUTHOR       : Jimmy Team (dibantu Claude)
  CREATED      : 2026-08-19
  LAST UPDATE  : 2026-08-19
 
  DESCRIPTION
  ------------------------------------------------------------------
- Halaman Input Manual — REDESIGN TOTAL. Sebelumnya per-baris lewat
- dropdown "Sheet Tujuan" (harus bolak-balik ganti sheet), sekarang
- SATU form utuh menampilkan semua field sekaligus, persis mengikuti
- struktur data mentah Instagram Insight (SEMUA KONTEN, TAYANGAN
- BERDASARKAN JENIS KONTEN, KONTEN POPULAR, ENGAGEMENT per jenis
- konten, FOLLOWER GROWTH, RENTANG USIA, JAM AKTIV). Field yang
- kadang dikasih dalam bentuk angka dan kadang persentase (Reach
- Follower/Non-Follower, Interaksi Follower/Non-Follower, Gender,
- Rentang Usia) punya toggle Angka/Persentase — kalau pilih
- Persentase, sistem otomatis menghitung angka aslinya dari base
- value di form yang sama (Tayangan, Interaksi, atau Total Follower).
+ Halaman Input Manual — form lengkap semua field data satu periode.
 
  VERSION HISTORY
  ------------------------------------------------------------------
@@ -28,13 +18,33 @@
  - Initial Release. Form per-baris via dropdown Sheet Tujuan.
 
  v2.0.0 — REDESIGN TOTAL
- - Diganti total jadi satu form utuh semua field, bukan per-baris
-   dropdown. Ditambah toggle Angka/Persentase untuk field yang
-   rawan dikirim dalam format persen.
+ - Diganti jadi satu form utuh semua field, dengan toggle
+   Angka/Persentase untuk field yang rawan dikirim dalam format persen.
+
+ v2.1.0
+ - Konten Populer: field Tag diganti Link, ditambah insight
+   per-konten (Like, Komen, Posting Ulang, Bagikan, Simpan).
+ - Engagement: struktur dibalik — header sekarang per metrik
+   (Like/Komen/Posting Ulang/Bagikan/Simpan/Balasan), isinya 4
+   jenis konten (Reel/Feed/Story/Siaran Langsung). ID field sama
+   persis seperti sebelumnya, jadi tidak mengubah cara JS membaca
+   nilainya — murni perubahan tampilan.
+ - Rentang Usia: diubah jadi satu baris per rentang usia dengan
+   kolom Wanita dan Laki-laki bersebelahan, bukan dua blok terpisah.
+ - Ditambahkan section baru "Lokasi Populer" — 5 negara/lokasi
+   audiens terpopuler beserta persentasenya.
 
  DEPENDENCIES
  ------------------------------------------------------------------
  Required : css/app.css, js/api.js, js/common.js, js/input-manual.js
+
+ CATATAN SHEET
+ ------------------------------------------------------------------
+ Sheet TOP_CONTENT butuh kolom tambahan: like, komen, posting_ulang,
+ bagikan, simpan (selain account_id, period_id, rank, content_type,
+ title, tag, link yang sudah ada).
+ Sheet baru TOP_LOCATIONS butuh kolom: account_id, period_id, rank,
+ location_name, percentage.
 ******************************************************************
 -->
 <!DOCTYPE html>
@@ -138,48 +148,62 @@
     <!-- ============ KONTEN POPULAR ============ -->
     <fieldset class="form-section">
       <legend>Konten Populer</legend>
+      <p class="hint">5 konten teratas — Judul, Link Instagram, dan insight (Like/Komen/Posting Ulang/Bagikan/Simpan) per konten.</p>
       <div id="mf-top-content-rows"></div>
+    </fieldset>
+
+    <!-- ============ LOKASI POPULER ============ -->
+    <fieldset class="form-section">
+      <legend>Lokasi Populer</legend>
+      <p class="hint">5 negara/lokasi audiens terpopuler beserta persentasenya.</p>
+      <div id="mf-top-location-rows"></div>
     </fieldset>
 
     <!-- ============ ENGAGEMENT ============ -->
     <fieldset class="form-section">
-      <legend>Engagement per Jenis Konten</legend>
+      <legend>Engagement per Metrik</legend>
       <div class="field-grid four-col">
         <div>
-          <span class="mode-toggle-title">Reels</span>
-          <label>Like<input type="number" id="mf-eng-reels-like"></label>
-          <label>Komen<input type="number" id="mf-eng-reels-komen"></label>
-          <label>Posting Ulang<input type="number" id="mf-eng-reels-posting_ulang"></label>
-          <label>Bagikan<input type="number" id="mf-eng-reels-bagikan"></label>
-          <label>Simpan<input type="number" id="mf-eng-reels-simpan"></label>
-          <label>Balasan<input type="number" id="mf-eng-reels-balasan"></label>
+          <span class="mode-toggle-title">Like</span>
+          <label>Reel<input type="number" id="mf-eng-reels-like"></label>
+          <label>Feed<input type="number" id="mf-eng-feed-like"></label>
+          <label>Story<input type="number" id="mf-eng-story-like"></label>
+          <label>Siaran Langsung<input type="number" id="mf-eng-live-like"></label>
         </div>
         <div>
-          <span class="mode-toggle-title">Feed</span>
-          <label>Like<input type="number" id="mf-eng-feed-like"></label>
-          <label>Komen<input type="number" id="mf-eng-feed-komen"></label>
-          <label>Posting Ulang<input type="number" id="mf-eng-feed-posting_ulang"></label>
-          <label>Bagikan<input type="number" id="mf-eng-feed-bagikan"></label>
-          <label>Simpan<input type="number" id="mf-eng-feed-simpan"></label>
-          <label>Balasan<input type="number" id="mf-eng-feed-balasan"></label>
+          <span class="mode-toggle-title">Komentar</span>
+          <label>Reel<input type="number" id="mf-eng-reels-komen"></label>
+          <label>Feed<input type="number" id="mf-eng-feed-komen"></label>
+          <label>Story<input type="number" id="mf-eng-story-komen"></label>
+          <label>Siaran Langsung<input type="number" id="mf-eng-live-komen"></label>
         </div>
         <div>
-          <span class="mode-toggle-title">Story</span>
-          <label>Like<input type="number" id="mf-eng-story-like"></label>
-          <label>Komen<input type="number" id="mf-eng-story-komen"></label>
-          <label>Posting Ulang<input type="number" id="mf-eng-story-posting_ulang"></label>
-          <label>Bagikan<input type="number" id="mf-eng-story-bagikan"></label>
-          <label>Simpan<input type="number" id="mf-eng-story-simpan"></label>
-          <label>Balasan<input type="number" id="mf-eng-story-balasan"></label>
+          <span class="mode-toggle-title">Posting Ulang</span>
+          <label>Reel<input type="number" id="mf-eng-reels-posting_ulang"></label>
+          <label>Feed<input type="number" id="mf-eng-feed-posting_ulang"></label>
+          <label>Story<input type="number" id="mf-eng-story-posting_ulang"></label>
+          <label>Siaran Langsung<input type="number" id="mf-eng-live-posting_ulang"></label>
         </div>
         <div>
-          <span class="mode-toggle-title">Siaran Langsung</span>
-          <label>Like<input type="number" id="mf-eng-live-like"></label>
-          <label>Komen<input type="number" id="mf-eng-live-komen"></label>
-          <label>Posting Ulang<input type="number" id="mf-eng-live-posting_ulang"></label>
-          <label>Bagikan<input type="number" id="mf-eng-live-bagikan"></label>
-          <label>Simpan<input type="number" id="mf-eng-live-simpan"></label>
-          <label>Balasan<input type="number" id="mf-eng-live-balasan"></label>
+          <span class="mode-toggle-title">Bagikan</span>
+          <label>Reel<input type="number" id="mf-eng-reels-bagikan"></label>
+          <label>Feed<input type="number" id="mf-eng-feed-bagikan"></label>
+          <label>Story<input type="number" id="mf-eng-story-bagikan"></label>
+          <label>Siaran Langsung<input type="number" id="mf-eng-live-bagikan"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Simpan</span>
+          <label>Reel<input type="number" id="mf-eng-reels-simpan"></label>
+          <label>Feed<input type="number" id="mf-eng-feed-simpan"></label>
+          <label>Story<input type="number" id="mf-eng-story-simpan"></label>
+          <label>Siaran Langsung<input type="number" id="mf-eng-live-simpan"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Balasan</span>
+          <label>Reel<input type="number" id="mf-eng-reels-balasan"></label>
+          <label>Feed<input type="number" id="mf-eng-feed-balasan"></label>
+          <label>Story<input type="number" id="mf-eng-story-balasan"></label>
+          <label>Siaran Langsung<input type="number" id="mf-eng-live-balasan"></label>
         </div>
       </div>
     </fieldset>
@@ -203,27 +227,41 @@
           <label>Laki-laki<input type="number" step="0.01" id="mf-lakilaki"></label>
         </div>
 
-        <div class="field-grid two-col">
-          <div>
-            <span class="mode-toggle-title">Rentang Usia — Wanita</span>
-            <label>13-17<input type="number" step="0.01" id="mf-age-wanita-13-17"></label>
-            <label>18-24<input type="number" step="0.01" id="mf-age-wanita-18-24"></label>
-            <label>25-34<input type="number" step="0.01" id="mf-age-wanita-25-34"></label>
-            <label>35-44<input type="number" step="0.01" id="mf-age-wanita-35-44"></label>
-            <label>45-54<input type="number" step="0.01" id="mf-age-wanita-45-54"></label>
-            <label>55-63<input type="number" step="0.01" id="mf-age-wanita-55-63"></label>
-            <label>65 UP<input type="number" step="0.01" id="mf-age-wanita-65-up"></label>
-          </div>
-          <div>
-            <span class="mode-toggle-title">Rentang Usia — Pria</span>
-            <label>13-17<input type="number" step="0.01" id="mf-age-pria-13-17"></label>
-            <label>18-24<input type="number" step="0.01" id="mf-age-pria-18-24"></label>
-            <label>25-34<input type="number" step="0.01" id="mf-age-pria-25-34"></label>
-            <label>35-44<input type="number" step="0.01" id="mf-age-pria-35-44"></label>
-            <label>45-54<input type="number" step="0.01" id="mf-age-pria-45-54"></label>
-            <label>55-63<input type="number" step="0.01" id="mf-age-pria-55-63"></label>
-            <label>65 UP<input type="number" step="0.01" id="mf-age-pria-65-up"></label>
-          </div>
+        <span class="mode-toggle-title">Rentang Usia (Wanita &amp; Laki-laki bersebelahan)</span>
+        <div class="age-row">
+          <span class="age-row-label">13-17</span>
+          <label>Wanita<input type="number" step="0.01" id="mf-age-wanita-13-17"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="mf-age-pria-13-17"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">18-24</span>
+          <label>Wanita<input type="number" step="0.01" id="mf-age-wanita-18-24"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="mf-age-pria-18-24"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">25-34</span>
+          <label>Wanita<input type="number" step="0.01" id="mf-age-wanita-25-34"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="mf-age-pria-25-34"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">35-44</span>
+          <label>Wanita<input type="number" step="0.01" id="mf-age-wanita-35-44"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="mf-age-pria-35-44"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">45-54</span>
+          <label>Wanita<input type="number" step="0.01" id="mf-age-wanita-45-54"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="mf-age-pria-45-54"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">55-63</span>
+          <label>Wanita<input type="number" step="0.01" id="mf-age-wanita-55-63"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="mf-age-pria-55-63"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">65 UP</span>
+          <label>Wanita<input type="number" step="0.01" id="mf-age-wanita-65-up"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="mf-age-pria-65-up"></label>
         </div>
       </div>
     </fieldset>
