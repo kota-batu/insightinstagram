@@ -3,7 +3,7 @@
  PROJECT      : Social Media Analytics Center
  MODULE       : Frontend - Web App
  FILE         : input-manual.html
- VERSION      : v2.1.0
+ VERSION      : v2.1.1
  AUTHOR       : Jimmy Team (dibantu Claude)
  CREATED      : 2026-08-19
  LAST UPDATE  : 2026-08-19
@@ -33,6 +33,11 @@
    kolom Wanita dan Laki-laki bersebelahan, bukan dua blok terpisah.
  - Ditambahkan section baru "Lokasi Populer" — 5 negara/lokasi
    audiens terpopuler beserta persentasenya.
+
+ v2.1.1
+ - Label "Nama Negara" diganti "Nama Kota" di section Lokasi
+   Populer (labelnya saja — nama field/kolom di database tetap
+   location_name, tidak berubah).
 
  DEPENDENCIES
  ------------------------------------------------------------------
@@ -155,7 +160,7 @@
     <!-- ============ LOKASI POPULER ============ -->
     <fieldset class="form-section">
       <legend>Lokasi Populer</legend>
-      <p class="hint">5 kota/lokasi audiens terpopuler beserta persentasenya.</p>
+      <p class="hint">5 kota audiens terpopuler beserta persentasenya.</p>
       <div id="mf-top-location-rows"></div>
     </fieldset>
 
