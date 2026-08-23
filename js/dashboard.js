@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : dashboard.js
- * VERSION      : v1.1.0
+ * VERSION      : v1.2.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-18
  * LAST UPDATE  : 2026-08-19
@@ -26,10 +26,17 @@
  *
  * v1.1.0
  * - Restrukturisasi: Dashboard jadi halaman HTML mandiri
- *   (index.html), bukan satu tab di antara beberapa. initDashboard()
- *   diganti initDashboardPage() yang juga memuat master data
- *   (accounts/periods) dan mengisi dropdown sendiri, karena app.js
- *   (yang dulu menyediakan itu) sudah digantikan common.js.
+ *   (index.html). initDashboard() diganti initDashboardPage().
+ *
+ * v1.2.0
+ * - PERIODS sekarang datang dari common.js sudah terurut dari
+ *   TERBARU ke terlama (lihat common.js v1.1.0), jadi default
+ *   Period/Compare dipilih dari index 0 dan 1, bukan elemen
+ *   terakhir array seperti sebelumnya.
+ * - FITUR: dropdown Compare sekarang otomatis difilter hanya
+ *   menampilkan periode dengan period_type SAMA dengan Period yang
+ *   dipilih (Mingguan vs Mingguan, Bulanan vs Bulanan), supaya
+ *   tidak salah banding minggu dengan bulan.
  *
  ******************************************************************/
 
@@ -351,6 +358,31 @@ function chartBaseOptions() {
 }
 
 /******************************************************************
+ * PERIOD / COMPARE FILTERING
+ * ----------------------------------------------------------------
+ * Fungsi penyaring dropdown Compare supaya jenisnya (Mingguan/
+ * Bulanan) selalu sama dengan dropdown Period.
+ ******************************************************************/
+
+/******************************************************************
+ * Function : refreshCompareOptions()
+ * Tujuan   : Mengisi ulang dropdown Compare hanya dengan periode
+ *            yang period_type-nya sama dengan Period yang sedang
+ *            dipilih, lalu pilih otomatis periode berikutnya yang
+ *            paling dekat sebagai default.
+ ******************************************************************/
+function refreshCompareOptions() {
+  const periodSelect = document.getElementById('d-period');
+  const compareSelect = document.getElementById('d-compare');
+  const selectedPeriod = PERIODS.find(period => period.period_id === periodSelect.value);
+  if (!selectedPeriod) return;
+
+  const sameTypePeriods = PERIODS.filter(period => period.period_type === selectedPeriod.period_type && period.period_id !== selectedPeriod.period_id);
+  fillSelect(compareSelect, sameTypePeriods, 'period_id', 'period_name');
+  if (sameTypePeriods.length > 0) compareSelect.value = sameTypePeriods[0].period_id;
+}
+
+/******************************************************************
  * DASHBOARD LOADER
  * ----------------------------------------------------------------
  * Fungsi utama pemuat dan penginisialisasi halaman Dashboard.
@@ -405,11 +437,12 @@ async function loadDashboard() {
 
 /******************************************************************
  * Function : initDashboardPage()
- * Tujuan   : Memuat master data (accounts/periods), mengisi
- *            dropdown Account/Period/Compare dengan nilai default
- *            (periode terbaru vs sebelumnya), memasang event
- *            listener tombol "Lihat Analytics", lalu memuat
- *            dashboard pertama kali.
+ * Tujuan   : Memuat master data (accounts/periods — sudah terurut
+ *            terbaru dulu), mengisi dropdown Account/Period dengan
+ *            nilai default (periode terbaru), menyaring dropdown
+ *            Compare sesuai jenis periode, memasang event listener
+ *            tombol "Lihat Analytics", lalu memuat dashboard
+ *            pertama kali.
  ******************************************************************/
 async function initDashboardPage() {
   const statusElement = document.getElementById('d-status');
@@ -418,13 +451,13 @@ async function initDashboardPage() {
 
     fillSelect(document.getElementById('d-account'), ACCOUNTS, 'account_id', 'account_name');
     fillSelect(document.getElementById('d-period'), PERIODS, 'period_id', 'period_name');
-    fillSelect(document.getElementById('d-compare'), PERIODS, 'period_id', 'period_name');
 
-    if (PERIODS.length > 1) {
-      document.getElementById('d-period').value = PERIODS[PERIODS.length - 1].period_id;
-      document.getElementById('d-compare').value = PERIODS[PERIODS.length - 2].period_id;
+    if (PERIODS.length > 0) {
+      document.getElementById('d-period').value = PERIODS[0].period_id;
     }
+    refreshCompareOptions();
 
+    document.getElementById('d-period').addEventListener('change', refreshCompareOptions);
     document.getElementById('d-load').addEventListener('click', loadDashboard);
     await loadDashboard();
   } catch (error) {
