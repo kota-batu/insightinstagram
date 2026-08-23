@@ -2,17 +2,21 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : input-manual.js
- * VERSION      : v1.0.0
+ * VERSION      : v2.0.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-19
  * LAST UPDATE  : 2026-08-19
  *
  * DESCRIPTION
  * ----------------------------------------------------------------
- * Logika halaman Input Manual (input-manual.html). Form dinamis
- * yang field-nya berubah sesuai sheet tujuan (MAIN, REACH_BY_TYPE,
- * ENGAGEMENT, ACTIVITY). Dipisah dari input.js v1.0.0 sebagai
- * bagian dari restrukturisasi arsitektur halaman terpisah.
+ * Logika halaman Input Manual (input-manual.html) versi REDESIGN
+ * TOTAL: satu form utuh berisi semua field (bukan per-baris via
+ * dropdown Sheet Tujuan). Field Reach Follower/Non-Follower,
+ * Interaksi Follower/Non-Follower, Gender, dan Rentang Usia punya
+ * toggle Angka/Persentase — kalau Persentase dipilih, nilai
+ * dikonversi ke angka asli di sisi client sebelum dikirim,
+ * memakai base value dari field lain di form yang sama (Tayangan,
+ * Interaksi, Total Follower).
  ******************************************************************/
 
 /******************************************************************
@@ -20,8 +24,15 @@
  * ----------------------------------------------------------------
  *
  * v1.0.0
- * - Initial Release.
+ * - Initial Release. Form per-baris via dropdown Sheet Tujuan.
  * - renderManualFields, handleSaveManual, initInputManualPage.
+ *
+ * v2.0.0 — REDESIGN TOTAL
+ * - Semua fungsi lama dihapus, diganti struktur form penuh:
+ *   buildMainPayload, buildReachByTypePayload, buildTopContentPayload,
+ *   buildEngagementPayload, buildGrowthAndAudiencePayload,
+ *   buildActivityPayload, validateForm, handleSaveAll.
+ * - Memakai action backend baru saveManualFull (bukan saveManual).
  *
  ******************************************************************/
 
@@ -41,29 +52,20 @@
 /******************************************************************
  * CONSTANTS
  * ----------------------------------------------------------------
- * Daftar field per sheet untuk form Input Manual.
+ * Jumlah baris tetap Konten Populer & Jam Aktif awal, daftar
+ * jenis konten/metric Engagement, dan daftar rentang usia.
  ******************************************************************/
 
-const MANUAL_FIELD_SETS = {
-  MAIN: [
-    { name: 'metric', label: 'Metric', type: 'select', options: ['TAYANGAN', 'FOLLOWER_REACH', 'NON_FOLLOWER_REACH', 'PENGIKUT_BERSIH', 'FOLLOWER_BARU', 'UNFOLLOW', 'INTERAKSI', 'INTERAKSI_FOLLOWER', 'INTERAKSI_NON_FOLLOWER'] },
-    { name: 'value', label: 'Value', type: 'number' }
-  ],
-  REACH_BY_TYPE: [
-    { name: 'content_type', label: 'Jenis Konten', type: 'select', options: ['PEMIRSA', 'STORY', 'REELS', 'FEED'] },
-    { name: 'audience_type', label: 'Audience', type: 'select', options: ['TOTAL', 'FOLLOWER', 'NON_FOLLOWER'] },
-    { name: 'value', label: 'Value', type: 'number' }
-  ],
-  ENGAGEMENT: [
-    { name: 'content_type', label: 'Jenis Konten', type: 'select', options: ['REELS', 'FEED', 'STORY', 'LIVE'] },
-    { name: 'metric', label: 'Metric', type: 'select', options: ['LIKE', 'KOMEN', 'POSTING_ULANG', 'BAGIKAN', 'SIMPAN', 'BALASAN'] },
-    { name: 'value', label: 'Value', type: 'number' }
-  ],
-  ACTIVITY: [
-    { name: 'time_slot', label: 'Jam', type: 'text' },
-    { name: 'active_audience', label: 'Audiens Aktif', type: 'number' }
-  ]
-};
+const TOP_CONTENT_ROW_COUNT = 5;
+const DEFAULT_ACTIVITY_ROW_COUNT = 5;
+
+const ENGAGEMENT_CONTENT_TYPE_KEYS = [['reels', 'REELS'], ['feed', 'FEED'], ['story', 'STORY'], ['live', 'LIVE']];
+const ENGAGEMENT_METRIC_KEYS = [['like', 'LIKE'], ['komen', 'KOMEN'], ['posting_ulang', 'POSTING_ULANG'], ['bagikan', 'BAGIKAN'], ['simpan', 'SIMPAN'], ['balasan', 'BALASAN']];
+const REACH_CONTENT_TYPE_KEYS = [['story', 'STORY'], ['reels', 'REELS'], ['feed', 'FEED']];
+const AGE_RANGE_KEYS = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-63', '65-up'];
+const AGE_RANGE_LABELS = { '13-17': '13-17', '18-24': '18-24', '25-34': '25-34', '35-44': '35-44', '45-54': '45-54', '55-63': '55-63', '65-up': '65 UP' };
+
+const MODE_PERCENT = 'PERCENT';
 
 /******************************************************************
  * CONFIGURATION
@@ -72,55 +74,335 @@ const MANUAL_FIELD_SETS = {
  ******************************************************************/
 
 /******************************************************************
- * FORM RENDERING
+ * FORM VALUE HELPERS
  * ----------------------------------------------------------------
- * Fungsi pembuat field form dinamis sesuai sheet tujuan.
+ * Fungsi bantu baca nilai input, mengembalikan null kalau kosong
+ * (supaya field kosong tidak ikut terkirim / tidak dianggap 0).
  ******************************************************************/
 
 /******************************************************************
- * Function : renderManualFields()
- * Tujuan   : Merender field form sesuai sheet yang dipilih di
- *            dropdown "Sheet Tujuan".
+ * Function : getInputValue()
+ * Tujuan   : Membaca nilai input number berdasarkan id, null kalau
+ *            kosong.
  ******************************************************************/
-function renderManualFields() {
-  const selectedSheet = document.getElementById('m-sheet').value;
-  const fields = MANUAL_FIELD_SETS[selectedSheet] || [];
+function getInputValue(elementId) {
+  const element = document.getElementById(elementId);
+  if (!element || element.value.trim() === '') return null;
+  return parseFloat(element.value);
+}
 
-  document.getElementById('m-fields').innerHTML = fields.map(field => {
-    if (field.type === 'select') {
-      const optionsHtml = field.options.map(option => `<option value="${option}">${option}</option>`).join('');
-      return `<label>${field.label}<select data-field="${field.name}">${optionsHtml}</select></label>`;
+/******************************************************************
+ * Function : getSelectedMode()
+ * Tujuan   : Membaca nilai radio button mode (Angka/Persentase)
+ *            berdasarkan nama grupnya.
+ ******************************************************************/
+function getSelectedMode(radioGroupName) {
+  const checkedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
+  return checkedRadio ? checkedRadio.value : 'COUNT';
+}
+
+/******************************************************************
+ * DYNAMIC ROW RENDERING
+ * ----------------------------------------------------------------
+ * Fungsi pembuat baris Konten Populer (tetap 5) dan Jam Aktif
+ * (dinamis, bisa ditambah/dihapus).
+ ******************************************************************/
+
+/******************************************************************
+ * Function : renderTopContentRows()
+ * Tujuan   : Merender 5 baris form Konten Populer (Judul + Tag).
+ ******************************************************************/
+function renderTopContentRows() {
+  const container = document.getElementById('mf-top-content-rows');
+  let rowsHtml = '';
+  for (let rank = 1; rank <= TOP_CONTENT_ROW_COUNT; rank++) {
+    rowsHtml += `<div class="field-grid top-content-row">
+      <span class="rank-label">#${rank}</span>
+      <label>Judul<input type="text" id="mf-top-title-${rank}"></label>
+      <label>Tag<input type="text" id="mf-top-tag-${rank}"></label>
+    </div>`;
+  }
+  container.innerHTML = rowsHtml;
+}
+
+/******************************************************************
+ * Function : addActivityRow()
+ * Tujuan   : Menambahkan satu baris form Jam Aktif (Jam + Audiens
+ *            Aktif + tombol hapus baris).
+ ******************************************************************/
+function addActivityRow(timeSlotValue, activeAudienceValue) {
+  const container = document.getElementById('mf-activity-rows');
+  const rowDiv = document.createElement('div');
+  rowDiv.className = 'activity-row';
+  rowDiv.innerHTML = `
+    <input type="text" placeholder="Jam (contoh: 9 SIANG)" class="mf-activity-time" value="${timeSlotValue || ''}">
+    <input type="number" placeholder="Audiens Aktif" class="mf-activity-value" value="${activeAudienceValue !== undefined && activeAudienceValue !== null ? activeAudienceValue : ''}">
+    <button type="button" class="btn-remove-row">✕</button>
+  `;
+  container.appendChild(rowDiv);
+  rowDiv.querySelector('.btn-remove-row').addEventListener('click', () => rowDiv.remove());
+}
+
+/******************************************************************
+ * Function : initActivityRows()
+ * Tujuan   : Mengisi baris awal Jam Aktif (kosong, siap diisi) dan
+ *            memasang tombol Tambah Jam.
+ ******************************************************************/
+function initActivityRows() {
+  for (let i = 0; i < DEFAULT_ACTIVITY_ROW_COUNT; i++) addActivityRow();
+  document.getElementById('mf-activity-add').addEventListener('click', () => addActivityRow());
+}
+
+/******************************************************************
+ * PAYLOAD BUILDERS
+ * ----------------------------------------------------------------
+ * Fungsi pengumpul nilai form jadi payload siap kirim ke backend,
+ * termasuk konversi persen ke angka untuk field yang mode-nya
+ * Persentase.
+ ******************************************************************/
+
+/******************************************************************
+ * Function : buildMainPayload()
+ * Tujuan   : Mengumpulkan field sheet MAIN. Reach dan Interaksi
+ *            Follower/Non-Follower dikonversi dari persen ke angka
+ *            kalau mode-nya Persentase (base: Tayangan / Interaksi).
+ ******************************************************************/
+function buildMainPayload() {
+  const main = {};
+  const tayangan = getInputValue('mf-tayangan');
+  const interaksi = getInputValue('mf-interaksi');
+
+  if (tayangan !== null) main.TAYANGAN = tayangan;
+  const pengikutBersih = getInputValue('mf-pengikut-bersih');
+  if (pengikutBersih !== null) main.PENGIKUT_BERSIH = pengikutBersih;
+  const followerBaru = getInputValue('mf-follower-baru');
+  if (followerBaru !== null) main.FOLLOWER_BARU = followerBaru;
+  const unfollow = getInputValue('mf-unfollow');
+  if (unfollow !== null) main.UNFOLLOW = unfollow;
+  if (interaksi !== null) main.INTERAKSI = interaksi;
+
+  const reachMode = getSelectedMode('mf-reach-mode');
+  const reachFollowerRaw = getInputValue('mf-reach-follower');
+  const reachNonFollowerRaw = getInputValue('mf-reach-nonfollower');
+  if (reachFollowerRaw !== null) {
+    main.FOLLOWER_REACH = reachMode === MODE_PERCENT ? Math.round(tayangan * reachFollowerRaw / 100) : reachFollowerRaw;
+  }
+  if (reachNonFollowerRaw !== null) {
+    main.NON_FOLLOWER_REACH = reachMode === MODE_PERCENT ? Math.round(tayangan * reachNonFollowerRaw / 100) : reachNonFollowerRaw;
+  }
+
+  const interaksiMode = getSelectedMode('mf-interaksi-mode');
+  const interaksiFollowerRaw = getInputValue('mf-interaksi-follower');
+  const interaksiNonFollowerRaw = getInputValue('mf-interaksi-nonfollower');
+  if (interaksiFollowerRaw !== null) {
+    main.INTERAKSI_FOLLOWER = interaksiMode === MODE_PERCENT ? Math.round(interaksi * interaksiFollowerRaw / 100) : interaksiFollowerRaw;
+  }
+  if (interaksiNonFollowerRaw !== null) {
+    main.INTERAKSI_NON_FOLLOWER = interaksiMode === MODE_PERCENT ? Math.round(interaksi * interaksiNonFollowerRaw / 100) : interaksiNonFollowerRaw;
+  }
+
+  return main;
+}
+
+/******************************************************************
+ * Function : buildReachByTypePayload()
+ * Tujuan   : Mengumpulkan field Pemirsa + Story/Reels/Feed
+ *            Follower/Non-Follower jadi array baris REACH_BY_TYPE.
+ ******************************************************************/
+function buildReachByTypePayload() {
+  const rows = [];
+  const pemirsa = getInputValue('mf-pemirsa');
+  if (pemirsa !== null) rows.push({ content_type: 'PEMIRSA', audience_type: 'TOTAL', value: pemirsa });
+
+  REACH_CONTENT_TYPE_KEYS.forEach(([idKey, label]) => {
+    const followerValue = getInputValue(`mf-${idKey}-follower`);
+    const nonFollowerValue = getInputValue(`mf-${idKey}-nonfollower`);
+    if (followerValue !== null) rows.push({ content_type: label, audience_type: 'FOLLOWER', value: followerValue });
+    if (nonFollowerValue !== null) rows.push({ content_type: label, audience_type: 'NON_FOLLOWER', value: nonFollowerValue });
+  });
+
+  return rows;
+}
+
+/******************************************************************
+ * Function : buildTopContentPayload()
+ * Tujuan   : Mengumpulkan 5 baris form Konten Populer, hanya baris
+ *            yang Judul-nya diisi yang dikirim.
+ ******************************************************************/
+function buildTopContentPayload() {
+  const rows = [];
+  for (let rank = 1; rank <= TOP_CONTENT_ROW_COUNT; rank++) {
+    const title = document.getElementById(`mf-top-title-${rank}`).value.trim();
+    const tag = document.getElementById(`mf-top-tag-${rank}`).value.trim();
+    if (title) rows.push({ rank, title, tag });
+  }
+  return rows;
+}
+
+/******************************************************************
+ * Function : buildEngagementPayload()
+ * Tujuan   : Mengumpulkan seluruh field Engagement (4 jenis konten
+ *            x 6 metric) jadi array baris ENGAGEMENT.
+ ******************************************************************/
+function buildEngagementPayload() {
+  const rows = [];
+  ENGAGEMENT_CONTENT_TYPE_KEYS.forEach(([typeKey, typeLabel]) => {
+    ENGAGEMENT_METRIC_KEYS.forEach(([metricKey, metricLabel]) => {
+      const value = getInputValue(`mf-eng-${typeKey}-${metricKey}`);
+      if (value !== null) rows.push({ content_type: typeLabel, metric: metricLabel, value });
+    });
+  });
+  return rows;
+}
+
+/******************************************************************
+ * Function : buildGrowthAndAudiencePayload()
+ * Tujuan   : Mengumpulkan FOLLOWER_GROWTH dan AUDIENCE_AGE. Gender
+ *            dan Rentang Usia dikonversi dari persen ke angka kalau
+ *            mode-nya Persentase (base: Total Follower untuk
+ *            gender, jumlah gender hasil hitung untuk usia).
+ ******************************************************************/
+function buildGrowthAndAudiencePayload() {
+  const growthPercent = getInputValue('mf-growth-percent');
+  const totalFollower = getInputValue('mf-total-follower');
+  const genderMode = getSelectedMode('mf-gender-mode');
+  const wanitaRaw = getInputValue('mf-wanita');
+  const lakilakiRaw = getInputValue('mf-lakilaki');
+
+  let followerGrowth = null;
+  let wanitaCount = null;
+  let lakilakiCount = null;
+
+  if (growthPercent !== null || totalFollower !== null || wanitaRaw !== null || lakilakiRaw !== null) {
+    wanitaCount = wanitaRaw === null ? null : (genderMode === MODE_PERCENT ? Math.round(totalFollower * wanitaRaw / 100) : wanitaRaw);
+    lakilakiCount = lakilakiRaw === null ? null : (genderMode === MODE_PERCENT ? Math.round(totalFollower * lakilakiRaw / 100) : lakilakiRaw);
+    followerGrowth = {
+      growth_percent: growthPercent,
+      total_follower: totalFollower,
+      female_total: wanitaCount,
+      male_total: lakilakiCount
+    };
+  }
+
+  const audienceRows = [];
+  AGE_RANGE_KEYS.forEach(ageKey => {
+    const ageLabel = AGE_RANGE_LABELS[ageKey];
+
+    const wanitaAgeRaw = getInputValue(`mf-age-wanita-${ageKey}`);
+    if (wanitaAgeRaw !== null) {
+      const value = genderMode === MODE_PERCENT && wanitaCount !== null ? Math.round(wanitaCount * wanitaAgeRaw / 100) : wanitaAgeRaw;
+      audienceRows.push({ gender: 'WANITA', age_range: ageLabel, value });
     }
-    return `<label>${field.label}<input type="${field.type}" data-field="${field.name}"></label>`;
-  }).join('');
+
+    const priaAgeRaw = getInputValue(`mf-age-pria-${ageKey}`);
+    if (priaAgeRaw !== null) {
+      const value = genderMode === MODE_PERCENT && lakilakiCount !== null ? Math.round(lakilakiCount * priaAgeRaw / 100) : priaAgeRaw;
+      audienceRows.push({ gender: 'PRIA', age_range: ageLabel, value });
+    }
+  });
+
+  return { followerGrowth, audienceRows };
+}
+
+/******************************************************************
+ * Function : buildActivityPayload()
+ * Tujuan   : Mengumpulkan seluruh baris Jam Aktif yang diisi
+ *            (Jam + Audiens Aktif keduanya wajib diisi per baris).
+ ******************************************************************/
+function buildActivityPayload() {
+  const rows = [];
+  document.querySelectorAll('#mf-activity-rows .activity-row').forEach(rowElement => {
+    const timeSlot = rowElement.querySelector('.mf-activity-time').value.trim();
+    const activeAudienceRaw = rowElement.querySelector('.mf-activity-value').value;
+    if (timeSlot && activeAudienceRaw !== '') {
+      rows.push({ time_slot: timeSlot, active_audience: parseFloat(activeAudienceRaw) });
+    }
+  });
+  return rows;
+}
+
+/******************************************************************
+ * VALIDATION
+ * ----------------------------------------------------------------
+ * Fungsi pengecek supaya mode Persentase tidak dipakai tanpa
+ * base value yang dibutuhkan untuk menghitungnya.
+ ******************************************************************/
+
+/******************************************************************
+ * Function : validateForm()
+ * Tujuan   : Mengecek base value (Tayangan, Interaksi, Total
+ *            Follower) sudah diisi kalau mode Persentase dipilih
+ *            untuk field terkait. Mengembalikan pesan error, atau
+ *            null kalau valid.
+ ******************************************************************/
+function validateForm() {
+  const tayangan = getInputValue('mf-tayangan');
+  const interaksi = getInputValue('mf-interaksi');
+  const totalFollower = getInputValue('mf-total-follower');
+
+  const reachMode = getSelectedMode('mf-reach-mode');
+  const reachFollowerRaw = getInputValue('mf-reach-follower');
+  const reachNonFollowerRaw = getInputValue('mf-reach-nonfollower');
+  if (reachMode === MODE_PERCENT && tayangan === null && (reachFollowerRaw !== null || reachNonFollowerRaw !== null)) {
+    return 'Mode Persentase untuk Reach butuh nilai Tayangan diisi dulu.';
+  }
+
+  const interaksiMode = getSelectedMode('mf-interaksi-mode');
+  const interaksiFollowerRaw = getInputValue('mf-interaksi-follower');
+  const interaksiNonFollowerRaw = getInputValue('mf-interaksi-nonfollower');
+  if (interaksiMode === MODE_PERCENT && interaksi === null && (interaksiFollowerRaw !== null || interaksiNonFollowerRaw !== null)) {
+    return 'Mode Persentase untuk Interaksi butuh nilai Interaksi diisi dulu.';
+  }
+
+  const genderMode = getSelectedMode('mf-gender-mode');
+  const wanitaRaw = getInputValue('mf-wanita');
+  const lakilakiRaw = getInputValue('mf-lakilaki');
+  if (genderMode === MODE_PERCENT && totalFollower === null && (wanitaRaw !== null || lakilakiRaw !== null)) {
+    return 'Mode Persentase untuk Gender butuh nilai Total Follower diisi dulu.';
+  }
+
+  return null;
 }
 
 /******************************************************************
  * EVENT HANDLERS
  * ----------------------------------------------------------------
- * Fungsi penangan klik tombol Simpan.
+ * Fungsi penangan klik tombol Simpan Semua.
  ******************************************************************/
 
 /******************************************************************
- * Function : handleSaveManual()
- * Tujuan   : Mengumpulkan nilai form manual dan mengirimkannya ke
- *            backend lewat action saveManual.
+ * Function : handleSaveAll()
+ * Tujuan   : Validasi form, kumpulkan seluruh payload dari semua
+ *            section, lalu kirim ke backend lewat action
+ *            saveManualFull.
  ******************************************************************/
-async function handleSaveManual() {
-  const statusElement = document.getElementById('m-status');
-  const selectedSheet = document.getElementById('m-sheet').value;
-  const row = {
-    account_id: document.getElementById('m-account').value,
-    period_id: document.getElementById('m-period').value
+async function handleSaveAll() {
+  const statusElement = document.getElementById('mf-status');
+  const validationError = validateForm();
+  if (validationError) {
+    setStatus(statusElement, validationError, STATUS_CLASS_ERROR);
+    return;
+  }
+
+  const growthAndAudience = buildGrowthAndAudiencePayload();
+  const payload = {
+    account_id: document.getElementById('mf-account').value,
+    period_id: document.getElementById('mf-period').value,
+    main: buildMainPayload(),
+    reach_by_type: buildReachByTypePayload(),
+    top_content: buildTopContentPayload(),
+    engagement: buildEngagementPayload(),
+    follower_growth: growthAndAudience.followerGrowth,
+    audience_age: growthAndAudience.audienceRows,
+    activity: buildActivityPayload()
   };
-  document.querySelectorAll('#m-fields [data-field]').forEach(field => row[field.dataset.field] = field.value);
 
   setStatus(statusElement, 'Menyimpan...', '');
   try {
-    await apiPost(POST_ACTIONS.SAVE_MANUAL, { sheet: selectedSheet, row });
-    setStatus(statusElement, '✓ Data berhasil disimpan.', STATUS_CLASS_SUCCESS);
+    await apiPost(POST_ACTIONS.SAVE_MANUAL_FULL, payload);
+    setStatus(statusElement, '✓ Semua data berhasil disimpan.', STATUS_CLASS_SUCCESS);
   } catch (error) {
-    console.error("[HANDLE_SAVE_MANUAL]", error);
+    console.error("[HANDLE_SAVE_ALL]", error);
     setStatus(statusElement, 'Gagal menyimpan: ' + error.message, STATUS_CLASS_ERROR);
   }
 }
@@ -134,24 +416,24 @@ async function handleSaveManual() {
 /******************************************************************
  * Function : initInputManualPage()
  * Tujuan   : Memuat master data (accounts/periods), mengisi
- *            dropdown Account/Period, merender field awal, lalu
- *            memasang event listener perubahan sheet dan tombol Simpan.
+ *            dropdown Account/Period, merender baris dinamis
+ *            (Konten Populer, Jam Aktif), lalu memasang event
+ *            listener tombol Simpan Semua.
  ******************************************************************/
 async function initInputManualPage() {
-  const statusElement = document.getElementById('m-status');
+  const statusElement = document.getElementById('mf-status');
   try {
     await Promise.all([loadAccounts(), loadPeriods()]);
 
-    fillSelect(document.getElementById('m-account'), ACCOUNTS, 'account_id', 'account_name');
-    fillSelect(document.getElementById('m-period'), PERIODS, 'period_id', 'period_name');
-
+    fillSelect(document.getElementById('mf-account'), ACCOUNTS, 'account_id', 'account_name');
+    fillSelect(document.getElementById('mf-period'), PERIODS, 'period_id', 'period_name');
     if (PERIODS.length > 0) {
-      document.getElementById('m-period').value = PERIODS[PERIODS.length - 1].period_id;
+      document.getElementById('mf-period').value = PERIODS[0].period_id;
     }
 
-    document.getElementById('m-sheet').addEventListener('change', renderManualFields);
-    document.getElementById('m-save').addEventListener('click', handleSaveManual);
-    renderManualFields();
+    renderTopContentRows();
+    initActivityRows();
+    document.getElementById('mf-save').addEventListener('click', handleSaveAll);
   } catch (error) {
     console.error("[INIT_INPUT_MANUAL_PAGE]", error);
     setStatus(statusElement, 'Gagal memuat data awal: ' + error.message, STATUS_CLASS_ERROR);
