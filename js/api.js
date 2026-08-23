@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : api.js
- * VERSION      : v1.0.1
+ * VERSION      : v1.0.2
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-18
  * LAST UPDATE  : 2026-08-19
@@ -24,6 +24,16 @@
  * v1.0.1
  * - Mengisi APPS_SCRIPT_URL dengan URL Web App hasil deploy.
  *
+ * v1.0.2 — BUG FIX
+ * - POST_ACTIONS ketinggalan dua action yang sudah ditambahkan di
+ *   backend (Code.gs): SAVE_MANUAL_FULL ('saveManualFull') dan
+ *   ADD_PERIOD ('addPeriod'). Akibatnya action terkirim sebagai
+ *   undefined, backend membalas "Action tidak dikenal: undefined"
+ *   — dialami di halaman Kelola Periode (Tambah Periode) dan
+ *   seharusnya juga di Input Manual (Simpan Semua). Sekarang
+ *   POST_ACTIONS di frontend ini sudah PERSIS SAMA dengan
+ *   POST_ACTIONS di Code.gs.
+ *
  ******************************************************************/
 
 /******************************************************************
@@ -39,6 +49,7 @@
  * - input-import.js
  * - input-manual.js
  * - input-pcp.js
+ * - manage-periods.js
  *
  ******************************************************************/
 
@@ -46,7 +57,9 @@
  * CONSTANTS
  * ----------------------------------------------------------------
  * Nama-nama action harus PERSIS SAMA dengan GET_ACTIONS /
- * POST_ACTIONS di Code.gs (backend).
+ * POST_ACTIONS di Code.gs (backend). Kalau backend nambah action
+ * baru, WAJIB ditambahkan juga di sini — kalau tidak, action
+ * terkirim sebagai undefined (lihat v1.0.2 di atas).
  ******************************************************************/
 
 const GET_ACTIONS = {
@@ -59,8 +72,10 @@ const POST_ACTIONS = {
   PREVIEW_PARSE: 'previewParse',
   SAVE_IMPORT: 'saveImport',
   SAVE_MANUAL: 'saveManual',
+  SAVE_MANUAL_FULL: 'saveManualFull',
   SAVE_PCP_REACH_INPUT: 'savePcpReachInput',
-  SAVE_PCP_AUDIENCE_INPUT: 'savePcpAudienceInput'
+  SAVE_PCP_AUDIENCE_INPUT: 'savePcpAudienceInput',
+  ADD_PERIOD: 'addPeriod'
 };
 
 const POST_CONTENT_TYPE = 'text/plain;charset=utf-8'; // hindari CORS preflight ke Apps Script
