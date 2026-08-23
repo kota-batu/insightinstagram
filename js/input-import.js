@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : input-import.js
- * VERSION      : v1.0.0
+ * VERSION      : v1.1.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-19
  * LAST UPDATE  : 2026-08-19
@@ -11,8 +11,7 @@
  * ----------------------------------------------------------------
  * Logika halaman Import Data (input-import.html). Alur: tempel
  * teks mentah Instagram Insight -> Parse & Preview -> cek tabel ->
- * Simpan. Dipisah dari input.js v1.0.0 sebagai bagian dari
- * restrukturisasi arsitektur halaman terpisah (bukan tab).
+ * Simpan.
  ******************************************************************/
 
 /******************************************************************
@@ -20,9 +19,17 @@
  * ----------------------------------------------------------------
  *
  * v1.0.0
- * - Initial Release.
+ * - Initial Release. Dipisah dari input.js sebagai halaman mandiri.
  * - renderPreviewTable, handlePreviewParse, handleSaveImport,
  *   initInputImportPage.
+ *
+ * v1.1.0
+ * - PERIODS sekarang datang dari common.js sudah terurut dari
+ *   TERBARU ke terlama, default Period Lama/Baru dipilih dari
+ *   index 0 dan 1.
+ * - FITUR: dropdown Period Lama otomatis difilter hanya
+ *   menampilkan periode dengan period_type SAMA dengan Period
+ *   Baru (Mingguan vs Mingguan, Bulanan vs Bulanan).
  *
  ******************************************************************/
 
@@ -101,6 +108,29 @@ function renderPreviewTable(parsedResult) {
 }
 
 /******************************************************************
+ * PERIOD FILTERING
+ * ----------------------------------------------------------------
+ * Fungsi penyaring dropdown Period Lama sesuai jenis Period Baru.
+ ******************************************************************/
+
+/******************************************************************
+ * Function : refreshPeriodOldOptions()
+ * Tujuan   : Mengisi ulang dropdown Period Lama hanya dengan
+ *            periode yang period_type-nya sama dengan Period Baru
+ *            yang sedang dipilih.
+ ******************************************************************/
+function refreshPeriodOldOptions() {
+  const periodNewSelect = document.getElementById('i-period-new');
+  const periodOldSelect = document.getElementById('i-period-old');
+  const selectedPeriodNew = PERIODS.find(period => period.period_id === periodNewSelect.value);
+  if (!selectedPeriodNew) return;
+
+  const sameTypePeriods = PERIODS.filter(period => period.period_type === selectedPeriodNew.period_type && period.period_id !== selectedPeriodNew.period_id);
+  fillSelect(periodOldSelect, sameTypePeriods, 'period_id', 'period_name');
+  if (sameTypePeriods.length > 0) periodOldSelect.value = sameTypePeriods[0].period_id;
+}
+
+/******************************************************************
  * EVENT HANDLERS
  * ----------------------------------------------------------------
  * Fungsi penangan klik tombol Parse & Preview dan Simpan.
@@ -172,10 +202,11 @@ async function handleSaveImport() {
 
 /******************************************************************
  * Function : initInputImportPage()
- * Tujuan   : Memuat master data (accounts/periods), mengisi
- *            dropdown Account/Period Lama/Period Baru dengan nilai
- *            default, lalu memasang event listener tombol Parse
- *            & Preview dan Simpan.
+ * Tujuan   : Memuat master data (accounts/periods — sudah terurut
+ *            terbaru dulu), mengisi dropdown Account/Period Baru
+ *            dengan nilai default, menyaring dropdown Period Lama
+ *            sesuai jenis Period Baru, lalu memasang event listener
+ *            tombol Parse & Preview dan Simpan.
  ******************************************************************/
 async function initInputImportPage() {
   const statusElement = document.getElementById('i-status');
@@ -183,14 +214,14 @@ async function initInputImportPage() {
     await Promise.all([loadAccounts(), loadPeriods()]);
 
     fillSelect(document.getElementById('i-account'), ACCOUNTS, 'account_id', 'account_name');
-    fillSelect(document.getElementById('i-period-old'), PERIODS, 'period_id', 'period_name');
     fillSelect(document.getElementById('i-period-new'), PERIODS, 'period_id', 'period_name');
 
-    if (PERIODS.length > 1) {
-      document.getElementById('i-period-old').value = PERIODS[PERIODS.length - 2].period_id;
-      document.getElementById('i-period-new').value = PERIODS[PERIODS.length - 1].period_id;
+    if (PERIODS.length > 0) {
+      document.getElementById('i-period-new').value = PERIODS[0].period_id;
     }
+    refreshPeriodOldOptions();
 
+    document.getElementById('i-period-new').addEventListener('change', refreshPeriodOldOptions);
     document.getElementById('i-preview').addEventListener('click', handlePreviewParse);
     document.getElementById('i-save').addEventListener('click', handleSaveImport);
   } catch (error) {
