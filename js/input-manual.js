@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : input-manual.js
- * VERSION      : v2.1.0
+ * VERSION      : v2.1.1
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-19
  * LAST UPDATE  : 2026-08-19
@@ -40,6 +40,10 @@
  * - Tidak ada perubahan pada buildEngagementPayload() dan bagian
  *   Rentang Usia — ID field HTML tetap sama meskipun tampilannya
  *   direstrukturisasi di input-manual.html v2.1.0.
+ *
+ * v2.1.1
+ * - Label "Nama Negara" diganti "Nama Kota" di renderTopLocationRows()
+ *   (label tampilan saja, field location_name di payload tidak berubah).
  *
  ******************************************************************/
 
@@ -150,7 +154,7 @@ function renderTopContentRows() {
 
 /******************************************************************
  * Function : renderTopLocationRows()
- * Tujuan   : Merender 5 baris form Lokasi Populer — Nama Negara +
+ * Tujuan   : Merender 5 baris form Lokasi Populer — Nama Kota +
  *            Persentase.
  ******************************************************************/
 function renderTopLocationRows() {
@@ -159,7 +163,7 @@ function renderTopLocationRows() {
   for (let rank = 1; rank <= TOP_LOCATION_ROW_COUNT; rank++) {
     rowsHtml += `<div class="field-grid top-location-row">
       <span class="rank-label">#${rank}</span>
-      <label>Nama Negara<input type="text" id="mf-loc-name-${rank}"></label>
+      <label>Nama Kota<input type="text" id="mf-loc-name-${rank}"></label>
       <label>Persentase (%)<input type="number" step="0.01" id="mf-loc-percent-${rank}"></label>
     </div>`;
   }
@@ -290,8 +294,8 @@ function buildTopContentPayload() {
 
 /******************************************************************
  * Function : buildTopLocationsPayload()
- * Tujuan   : Mengumpulkan 5 baris form Lokasi Populer (Nama Negara
- *            + Persentase). Hanya baris yang nama negaranya diisi
+ * Tujuan   : Mengumpulkan 5 baris form Lokasi Populer (Nama Kota
+ *            + Persentase). Hanya baris yang nama kotanya diisi
  *            yang dikirim.
  ******************************************************************/
 function buildTopLocationsPayload() {
