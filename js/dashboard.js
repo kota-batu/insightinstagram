@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : dashboard.js
- * VERSION      : v1.2.0
+ * VERSION      : v1.3.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-18
  * LAST UPDATE  : 2026-08-19
@@ -20,23 +20,20 @@
  *
  * v1.0.0
  * - Initial Release.
- * - renderKpiCard, renderReachCard, renderEngagementCard,
- *   renderTopContentCard, renderGrowthCard, renderAudienceCard,
- *   renderActivityCard, loadDashboard, initDashboard.
  *
  * v1.1.0
- * - Restrukturisasi: Dashboard jadi halaman HTML mandiri
- *   (index.html). initDashboard() diganti initDashboardPage().
+ * - Restrukturisasi: Dashboard jadi halaman HTML mandiri.
  *
  * v1.2.0
- * - PERIODS sekarang datang dari common.js sudah terurut dari
- *   TERBARU ke terlama (lihat common.js v1.1.0), jadi default
- *   Period/Compare dipilih dari index 0 dan 1, bukan elemen
- *   terakhir array seperti sebelumnya.
- * - FITUR: dropdown Compare sekarang otomatis difilter hanya
- *   menampilkan periode dengan period_type SAMA dengan Period yang
- *   dipilih (Mingguan vs Mingguan, Bulanan vs Bulanan), supaya
- *   tidak salah banding minggu dengan bulan.
+ * - Default Period/Compare dari PERIODS terbaru dulu, filter
+ *   Compare sesuai jenis periode (Mingguan/Bulanan).
+ *
+ * v1.3.0
+ * - renderTopContentCard() sekarang menampilkan insight per konten
+ *   (Like/Komen/Posting Ulang/Bagikan/Simpan), tombol link Instagram
+ *   tetap otomatis muncul kalau field link diisi.
+ * - Ditambahkan kartu baru renderTopLocationsCard() — daftar 5
+ *   negara/lokasi audiens terpopuler.
  *
  ******************************************************************/
 
@@ -71,6 +68,10 @@ const MAIN_METRIC_LABELS = {
   INTERAKSI: 'Interaksi',
   INTERAKSI_FOLLOWER: 'Interaksi dari Follower',
   INTERAKSI_NON_FOLLOWER: 'Interaksi dari Non-Follower'
+};
+
+const TOP_CONTENT_INSIGHT_LABELS = {
+  like: 'Like', komen: 'Komen', posting_ulang: 'Posting Ulang', bagikan: 'Bagikan', simpan: 'Simpan'
 };
 
 const REACH_CONTENT_TYPES = ['STORY', 'REELS', 'FEED'];
@@ -250,20 +251,43 @@ function drawEngagementChart(dashboardData) {
 
 /******************************************************************
  * Function : renderTopContentCard()
- * Tujuan   : Merender daftar Konten Populer beserta link Instagram
- *            (jika sudah diisi manual).
+ * Tujuan   : Merender daftar Konten Populer beserta insight per
+ *            konten (Like/Komen/Posting Ulang/Bagikan/Simpan) dan
+ *            link Instagram (kalau sudah diisi).
  ******************************************************************/
 function renderTopContentCard(dashboardData) {
-  const items = dashboardData.top_content.map(item => `
+  const items = dashboardData.top_content.map(item => {
+    const insightHtml = Object.keys(TOP_CONTENT_INSIGHT_LABELS)
+      .filter(metricKey => item[metricKey] !== undefined && item[metricKey] !== '')
+      .map(metricKey => `<span class="top-content-insight-item">${TOP_CONTENT_INSIGHT_LABELS[metricKey]}: <b>${Number(item[metricKey]).toLocaleString(LOCALE_ID)}</b></span>`)
+      .join('');
+
+    return `
     <div class="top-content-item">
       <span class="rank-badge">${item.rank}</span>
       <div>
         <div class="top-content-title">${item.title}</div>
-        <div class="top-content-tag">${item.tag}</div>
+        ${insightHtml ? `<div class="top-content-insight">${insightHtml}</div>` : ''}
         ${item.link ? `<a class="top-content-link" href="${item.link}" target="_blank">Buka Instagram →</a>` : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="card"><h3>Konten Populer</h3>${items || '<p class="hint">Belum ada data.</p>'}</div>`;
+}
+
+/******************************************************************
+ * Function : renderTopLocationsCard()
+ * Tujuan   : Merender daftar 5 negara/lokasi audiens terpopuler
+ *            beserta persentasenya.
+ ******************************************************************/
+function renderTopLocationsCard(dashboardData) {
+  const locations = dashboardData.top_locations || [];
+  const items = locations.map(item => `
+    <div class="kpi-row">
+      <span class="kpi-label">#${item.rank} ${item.location_name}</span>
+      <span class="kpi-value">${item.percentage !== '' && item.percentage !== undefined ? item.percentage + '%' : '-'}</span>
+    </div>`).join('');
+  return `<div class="card"><h3>Lokasi Populer</h3><div class="kpi-list">${items || '<p class="hint">Belum ada data.</p>'}</div></div>`;
 }
 
 /******************************************************************
@@ -414,6 +438,7 @@ async function loadDashboard() {
       renderReachCard() +
       renderEngagementCard() +
       renderTopContentCard(dashboardData) +
+      renderTopLocationsCard(dashboardData) +
       renderAudienceCard() +
       renderActivityCard();
 
