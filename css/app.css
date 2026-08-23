@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : app.css
- * VERSION      : v1.1.0
+ * VERSION      : v1.2.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-18
  * LAST UPDATE  : 2026-08-19
@@ -10,8 +10,9 @@
  * DESCRIPTION
  * ----------------------------------------------------------------
  * Stylesheet tunggal untuk seluruh halaman (index.html,
- * input-import.html, input-manual.html, input-pcp.html).
- * Tema dark, aksen warna keemasan mengikuti nuansa lounge/cafe.
+ * input-import.html, input-manual.html, input-pcp.html,
+ * manage-periods.html). Tema dark, aksen warna keemasan mengikuti
+ * nuansa lounge/cafe.
  *
  * VERSION HISTORY
  * ----------------------------------------------------------------
@@ -20,10 +21,14 @@
  *
  * v1.1.0
  * - Restrukturisasi: halaman dipecah jadi file terpisah. Style
- *   .tab-btn / .view / .input-tab-btn / .input-panel (untuk tab
- *   JS dalam satu halaman) dihapus karena tidak dipakai lagi.
- * - Ditambahkan .page-nav / .nav-link untuk navigasi antar halaman
- *   fisik memakai elemen <a>.
+ *   .tab-btn / .view / .input-tab-btn / .input-panel dihapus.
+ * - Ditambahkan .page-nav / .nav-link untuk navigasi antar halaman.
+ *
+ * v1.2.0
+ * - Ditambahkan style untuk form Input Manual redesign total:
+ *   .form-section, .field-grid (+ .two-col/.three-col/.four-col),
+ *   .mode-toggle-block, .mode-toggle, .mode-toggle-title,
+ *   .top-content-row, .rank-label, .activity-row, .btn-remove-row.
  ******************************************************************/
 
 /******************************************************************
@@ -56,9 +61,6 @@ body {
 
 /******************************************************************
  * TOP BAR + PAGE NAVIGATION
- * ----------------------------------------------------------------
- * Navigasi antar halaman fisik (index.html, input-import.html,
- * input-manual.html, input-pcp.html) memakai elemen <a>.
  ******************************************************************/
 
 .topbar {
@@ -73,7 +75,7 @@ body {
 .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: 0.02em; }
 .brand-mark { color: var(--accent); font-size: 10px; }
 
-.page-nav { display: flex; gap: 4px; }
+.page-nav { display: flex; gap: 4px; flex-wrap: wrap; }
 .nav-link {
   background: transparent;
   border: 1px solid transparent;
@@ -119,7 +121,7 @@ main { padding: 24px 28px 60px; max-width: 1180px; margin: 0 auto; }
   letter-spacing: 0.04em;
 }
 
-select, input[type="number"], input[type="text"], textarea {
+select, input[type="number"], input[type="text"], input[type="date"], textarea {
   background: var(--panel-alt);
   border: 1px solid var(--border);
   color: var(--text);
@@ -199,7 +201,7 @@ textarea { width: 100%; resize: vertical; font-family: 'SF Mono', Consolas, mono
 .top-content-link { font-size: 12px; color: var(--accent); text-decoration: none; }
 
 /******************************************************************
- * INPUT PAGES (Import / Manual / PCP)
+ * IMPORT / PCP TABLES
  ******************************************************************/
 
 table.pcp-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
@@ -207,12 +209,106 @@ table.pcp-table th, table.pcp-table td { border: 1px solid var(--border); paddin
 table.pcp-table th { background: var(--panel-alt); color: var(--text-dim); font-weight: 500; text-transform: uppercase; font-size: 11px; }
 table.pcp-table input { width: 100%; }
 
-.manual-fields { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; }
-.manual-fields label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-dim); }
-
 .preview-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
 .preview-table th, .preview-table td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
 .preview-table th { background: var(--panel-alt); color: var(--text-dim); font-size: 11px; text-transform: uppercase; }
+
+/******************************************************************
+ * INPUT MANUAL — FORM LENGKAP (v2.0.0)
+ ******************************************************************/
+
+.form-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.form-section legend {
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.field-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.field-grid.two-col { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.field-grid.three-col { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.field-grid.four-col { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.field-grid.three-col > div,
+.field-grid.four-col > div,
+.field-grid.two-col > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.field-grid.three-col > div label,
+.field-grid.four-col > div label,
+.field-grid.two-col > div label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.mode-toggle-block {
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.mode-toggle-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.mode-toggle { display: flex; gap: 16px; margin-bottom: 10px; font-size: 12px; color: var(--text-dim); }
+.mode-toggle label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.top-content-row {
+  grid-template-columns: 32px 1fr 1fr;
+  align-items: end;
+}
+.rank-label { color: var(--accent); font-weight: 700; font-size: 13px; padding-bottom: 8px; }
+
+.activity-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.activity-row .mf-activity-time { flex: 1; }
+.activity-row .mf-activity-value { width: 140px; }
+.btn-remove-row {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  color: var(--down);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 13px;
+}
 
 /******************************************************************
  * RESPONSIVE
@@ -223,4 +319,5 @@ table.pcp-table input { width: 100%; }
   .controls-bar { flex-direction: column; align-items: stretch; }
   .topbar { flex-direction: column; align-items: stretch; gap: 12px; }
   .page-nav { flex-wrap: wrap; }
+  .activity-row { flex-wrap: wrap; }
 }
