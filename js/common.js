@@ -2,18 +2,17 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : common.js
- * VERSION      : v1.0.0
+ * VERSION      : v1.1.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-19
  * LAST UPDATE  : 2026-08-19
  *
  * DESCRIPTION
  * ----------------------------------------------------------------
- * Utilitas dasar yang dipakai di semua halaman (Dashboard,
- * Import Data, Input Manual, Khusus PCP): status message,
- * pengisian dropdown, dan pemuat master data (accounts & periods).
- * Menggantikan app.js v1.0.0 — logika tab dihapus karena setiap
- * halaman sekarang file HTML terpisah, bukan tab dalam satu halaman.
+ * Utilitas dasar yang dipakai di semua halaman (Dashboard, Import
+ * Data, Input Manual, Khusus PCP, Kelola Periode): status message,
+ * pengisian dropdown, pemuat master data (accounts & periods), dan
+ * pengurut periode berdasarkan tanggal.
  ******************************************************************/
 
 /******************************************************************
@@ -21,10 +20,16 @@
  * ----------------------------------------------------------------
  *
  * v1.0.0
- * - Initial Release.
- * - Menggantikan app.js: setStatus, fillSelect, loadAccounts,
- *   loadPeriods. Fungsi tab switching dihapus (tidak dipakai lagi
- *   setelah halaman dipisah per file).
+ * - Initial Release. Menggantikan app.js.
+ * - setStatus, fillSelect, loadAccounts, loadPeriods.
+ *
+ * v1.1.0
+ * - Menambahkan sortPeriodsByDateDescending() — dipakai supaya
+ *   dropdown Period selalu urut dari yang terbaru, dan default
+ *   pilihan otomatis (untuk Dashboard/Import) selalu mengambil
+ *   periode paling baru, apa pun urutan barisnya di sheet PERIODS.
+ *   Diperlukan sejak periode bisa ditambah lewat halaman Kelola
+ *   Periode (tidak selalu berurutan kronologis di sheet).
  *
  ******************************************************************/
 
@@ -40,13 +45,14 @@
  * - input-import.js
  * - input-manual.js
  * - input-pcp.js
+ * - manage-periods.js
  *
  ******************************************************************/
 
 /******************************************************************
  * CONSTANTS
  * ----------------------------------------------------------------
- * Nama class CSS untuk status pesan error.
+ * Nama class CSS untuk status pesan.
  ******************************************************************/
 
 const STATUS_CLASS_ERROR = 'error';
@@ -94,6 +100,17 @@ function fillSelect(selectElement, items, valueKey, labelKey) {
 }
 
 /******************************************************************
+ * Function : sortPeriodsByDateDescending()
+ * Tujuan   : Mengurutkan array periode dari start_date terbaru ke
+ *            terlama. Dipakai supaya pilihan default (periode
+ *            terbaru) selalu benar meskipun urutan baris di sheet
+ *            PERIODS tidak kronologis.
+ ******************************************************************/
+function sortPeriodsByDateDescending(periods) {
+  return [...periods].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+}
+
+/******************************************************************
  * MASTER DATA LOADERS
  * ----------------------------------------------------------------
  * Fungsi pemuat data accounts & periods dari backend. Tidak
@@ -113,10 +130,12 @@ async function loadAccounts() {
 
 /******************************************************************
  * Function : loadPeriods()
- * Tujuan   : Mengambil daftar periode dari backend, simpan ke PERIODS.
+ * Tujuan   : Mengambil daftar periode dari backend (sudah diurutkan
+ *            dari yang terbaru), simpan ke PERIODS.
  ******************************************************************/
 async function loadPeriods() {
-  PERIODS = await apiGet(GET_ACTIONS.GET_PERIODS);
+  const rawPeriods = await apiGet(GET_ACTIONS.GET_PERIODS);
+  PERIODS = sortPeriodsByDateDescending(rawPeriods);
   console.log("[LOAD_PERIODS]", PERIODS.length + ' periode dimuat');
   return PERIODS;
 }
