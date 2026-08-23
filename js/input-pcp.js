@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : input-pcp.js
- * VERSION      : v1.0.0
+ * VERSION      : v1.1.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-19
  * LAST UPDATE  : 2026-08-19
@@ -24,6 +24,10 @@
  * - Initial Release.
  * - renderPcpAudienceRows, handleSavePcpReach,
  *   handleSavePcpAudience, initInputPcpPage.
+ *
+ * v1.1.0
+ * - PERIODS sekarang datang dari common.js sudah terurut dari
+ *   TERBARU ke terlama, default Period dipilih dari index 0.
  *
  ******************************************************************/
 
@@ -172,7 +176,7 @@ async function initInputPcpPage() {
 
     fillSelect(document.getElementById('p-period'), PERIODS, 'period_id', 'period_name');
     if (PERIODS.length > 0) {
-      document.getElementById('p-period').value = PERIODS[PERIODS.length - 1].period_id;
+      document.getElementById('p-period').value = PERIODS[0].period_id;
     }
 
     renderPcpAudienceRows();
