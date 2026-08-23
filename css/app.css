@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : app.css
- * VERSION      : v1.2.0
+ * VERSION      : v1.3.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-18
  * LAST UPDATE  : 2026-08-19
@@ -29,6 +29,17 @@
  *   .form-section, .field-grid (+ .two-col/.three-col/.four-col),
  *   .mode-toggle-block, .mode-toggle, .mode-toggle-title,
  *   .top-content-row, .rank-label, .activity-row, .btn-remove-row.
+ *
+ * v1.3.0
+ * - Ditambahkan .top-content-block/.top-content-header/.five-col
+ *   untuk blok Konten Populer baru (Judul+Link+5 insight).
+ * - Ditambahkan .top-content-insight/.top-content-insight-item
+ *   untuk tampilan insight per konten di kartu Dashboard.
+ * - Ditambahkan .age-row/.age-row-label untuk layout Rentang Usia
+ *   satu baris per rentang (Wanita+Laki-laki bersebelahan).
+ * - Ditambahkan .top-location-row untuk section Lokasi Populer.
+ * - .field-grid.four-col dipakai ulang untuk grouping Engagement
+ *   per-metrik (sebelumnya per jenis konten) — tidak perlu style baru.
  ******************************************************************/
 
 /******************************************************************
@@ -197,8 +208,10 @@ textarea { width: 100%; resize: vertical; font-family: 'SF Mono', Consolas, mono
   font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0;
 }
 .top-content-title { font-weight: 600; font-size: 13px; }
-.top-content-tag { color: var(--text-dim); font-size: 12px; }
-.top-content-link { font-size: 12px; color: var(--accent); text-decoration: none; }
+.top-content-insight { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.top-content-insight-item { font-size: 12px; color: var(--text-dim); }
+.top-content-insight-item b { color: var(--text); }
+.top-content-link { font-size: 12px; color: var(--accent); text-decoration: none; display: inline-block; margin-top: 4px; }
 
 /******************************************************************
  * IMPORT / PCP TABLES
@@ -214,7 +227,7 @@ table.pcp-table input { width: 100%; }
 .preview-table th { background: var(--panel-alt); color: var(--text-dim); font-size: 11px; text-transform: uppercase; }
 
 /******************************************************************
- * INPUT MANUAL — FORM LENGKAP (v2.0.0)
+ * INPUT MANUAL — FORM LENGKAP
  ******************************************************************/
 
 .form-section {
@@ -249,6 +262,7 @@ table.pcp-table input { width: 100%; }
 .field-grid.two-col { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .field-grid.three-col { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .field-grid.four-col { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.field-grid.five-col { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
 .field-grid.three-col > div,
 .field-grid.four-col > div,
 .field-grid.two-col > div {
@@ -285,11 +299,39 @@ table.pcp-table input { width: 100%; }
 .mode-toggle { display: flex; gap: 16px; margin-bottom: 10px; font-size: 12px; color: var(--text-dim); }
 .mode-toggle label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 
-.top-content-row {
+/* Konten Populer — blok per rank (Judul+Link+5 insight) */
+.top-content-block {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.top-content-header {
+  display: grid;
   grid-template-columns: 32px 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+/* Lokasi Populer — satu baris per rank */
+.top-location-row {
+  grid-template-columns: 32px 2fr 1fr;
   align-items: end;
 }
+
 .rank-label { color: var(--accent); font-weight: 700; font-size: 13px; padding-bottom: 8px; }
+
+/* Rentang Usia — satu baris per rentang, Wanita+Laki-laki bersebelahan */
+.age-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+.age-row-label { color: var(--text-dim); font-size: 12px; padding-bottom: 8px; }
 
 .activity-row {
   display: flex;
@@ -320,4 +362,6 @@ table.pcp-table input { width: 100%; }
   .topbar { flex-direction: column; align-items: stretch; gap: 12px; }
   .page-nav { flex-wrap: wrap; }
   .activity-row { flex-wrap: wrap; }
+  .top-content-header { grid-template-columns: 1fr; }
+  .age-row { grid-template-columns: 1fr; }
 }
