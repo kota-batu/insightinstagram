@@ -3,7 +3,7 @@
  PROJECT      : Social Media Analytics Center
  MODULE       : Frontend - Web App
  FILE         : input-manual.html
- VERSION      : v2.1.1
+ VERSION      : v2.1.2
  AUTHOR       : Jimmy Team (dibantu Claude)
  CREATED      : 2026-08-19
  LAST UPDATE  : 2026-08-19
@@ -39,6 +39,10 @@
    Populer (labelnya saja — nama field/kolom di database tetap
    location_name, tidak berubah).
 
+ v2.1.2
+ - Menambahkan query version (?v=x.x.x) di setiap <script>/<link>
+   untuk cache busting (lihat index.html v1.2.1).
+
  DEPENDENCIES
  ------------------------------------------------------------------
  Required : css/app.css, js/api.js, js/common.js, js/input-manual.js
@@ -58,7 +62,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Input Manual — Social Media Analytics Center</title>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=1.3.0">
 </head>
 <body>
 
@@ -286,8 +290,8 @@
   </section>
 </main>
 
-<script src="js/api.js"></script>
-<script src="js/common.js"></script>
-<script src="js/input-manual.js"></script>
+<script src="js/api.js?v=1.0.2"></script>
+<script src="js/common.js?v=1.1.0"></script>
+<script src="js/input-manual.js?v=2.1.1"></script>
 </body>
 </html>
