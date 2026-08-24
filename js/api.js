@@ -86,7 +86,7 @@ const POST_CONTENT_TYPE = 'text/plain;charset=utf-8'; // hindari CORS preflight 
  * URL Web App hasil Deploy Apps Script.
  ******************************************************************/
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9nrP4V0zyHvkB7Z0-a-n0KVTxFszFlJ_Qn0TQyIInhEduu9PNyrVPyGpcGym2mTSSaw/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_aXtpH3KyhIRSXFV62DGZNsWv_eF8_Mb1GCtHVXN-rlmtB_DV--tNdvgqapxZpaCfrg/exec';
 
 /******************************************************************
  * HTTP HELPERS
