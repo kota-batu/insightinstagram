@@ -3,7 +3,7 @@
  PROJECT      : Social Media Analytics Center
  MODULE       : Frontend - Web App
  FILE         : input-manual.html
- VERSION      : v2.1.2
+ VERSION      : v2.2.0
  AUTHOR       : Jimmy Team (dibantu Claude)
  CREATED      : 2026-08-19
  LAST UPDATE  : 2026-08-19
@@ -24,24 +24,33 @@
  v2.1.0
  - Konten Populer: field Tag diganti Link, ditambah insight
    per-konten (Like, Komen, Posting Ulang, Bagikan, Simpan).
- - Engagement: struktur dibalik — header sekarang per metrik
-   (Like/Komen/Posting Ulang/Bagikan/Simpan/Balasan), isinya 4
-   jenis konten (Reel/Feed/Story/Siaran Langsung). ID field sama
-   persis seperti sebelumnya, jadi tidak mengubah cara JS membaca
-   nilainya — murni perubahan tampilan.
- - Rentang Usia: diubah jadi satu baris per rentang usia dengan
-   kolom Wanita dan Laki-laki bersebelahan, bukan dua blok terpisah.
- - Ditambahkan section baru "Lokasi Populer" — 5 negara/lokasi
-   audiens terpopuler beserta persentasenya.
+ - Engagement: struktur dibalik — header per metrik.
+ - Rentang Usia: satu baris per rentang usia.
+ - Ditambahkan section baru "Lokasi Populer".
 
  v2.1.1
- - Label "Nama Negara" diganti "Nama Kota" di section Lokasi
-   Populer (labelnya saja — nama field/kolom di database tetap
-   location_name, tidak berubah).
+ - Label "Nama Negara" diganti "Nama Kota".
 
  v2.1.2
  - Menambahkan query version (?v=x.x.x) di setiap <script>/<link>
-   untuk cache busting (lihat index.html v1.2.1).
+   untuk cache busting.
+
+ v2.2.0
+ - Restrukturisasi urutan & pengelompokan field (tidak ada
+   perubahan ID, jadi input-manual.js TIDAK PERLU diganti):
+   1. "Semua Konten" dipecah jadi 3 blok berkelompok:
+      (a) Tayangan + toggle Reach Follower/Non-Follower jadi satu
+          blok, (b) Pengikut Bersih + Follower Baru + Unfollow jadi
+          satu baris, (c) Interaksi + toggle Interaksi Follower/
+          Non-Follower jadi satu blok.
+   2. Section "Engagement per Metrik" di-rename jadi "Interaksi
+      Berdasarkan Jenis Konten" dan dipindah ke urutan tepat
+      setelah Konten Populer (sebelumnya di bawah Lokasi Populer).
+   3. Section "Lokasi Populer" dipindah ke setelah Follower Growth
+      & Demografi (sebelumnya sebelum Engagement).
+ - Urutan akhir: Semua Konten -> Tayangan Berdasarkan Jenis Konten
+   -> Konten Populer -> Interaksi Berdasarkan Jenis Konten ->
+   Follower Growth & Demografi -> Lokasi Populer -> Jam Aktif.
 
  DEPENDENCIES
  ------------------------------------------------------------------
@@ -62,7 +71,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Input Manual — Social Media Analytics Center</title>
-<link rel="stylesheet" href="css/app.css?v=1.3.0">
+<link rel="stylesheet" href="css/app.css?v=1.4.0">
 </head>
 <body>
 
@@ -93,18 +102,15 @@
     </div>
     <p class="hint">Angka desimal pakai titik (.), bukan koma — contoh: 80.3 bukan 80,3.</p>
 
-    <!-- ============ SEMUA KONTEN ============ -->
+    <!-- ============ 1. SEMUA KONTEN ============ -->
     <fieldset class="form-section">
       <legend>Semua Konten</legend>
-      <div class="field-grid">
-        <label>Tayangan<input type="number" id="mf-tayangan"></label>
-        <label>Pengikut Bersih<input type="number" id="mf-pengikut-bersih"></label>
-        <label>Follower Baru<input type="number" id="mf-follower-baru"></label>
-        <label>Unfollow<input type="number" id="mf-unfollow"></label>
-        <label>Interaksi<input type="number" id="mf-interaksi"></label>
-      </div>
 
+      <!-- Blok A: Tayangan + Reach Follower/Non-Follower -->
       <div class="mode-toggle-block">
+        <div class="field-grid">
+          <label>Tayangan<input type="number" id="mf-tayangan"></label>
+        </div>
         <span class="mode-toggle-title">Reach Follower / Non-Follower</span>
         <div class="mode-toggle">
           <label><input type="radio" name="mf-reach-mode" value="COUNT" checked> Angka</label>
@@ -116,7 +122,18 @@
         </div>
       </div>
 
+      <!-- Blok B: Pengikut Bersih + Follower Baru + Unfollow -->
+      <div class="field-grid">
+        <label>Pengikut Bersih<input type="number" id="mf-pengikut-bersih"></label>
+        <label>Follower Baru<input type="number" id="mf-follower-baru"></label>
+        <label>Unfollow<input type="number" id="mf-unfollow"></label>
+      </div>
+
+      <!-- Blok C: Interaksi + Interaksi Follower/Non-Follower -->
       <div class="mode-toggle-block">
+        <div class="field-grid">
+          <label>Interaksi<input type="number" id="mf-interaksi"></label>
+        </div>
         <span class="mode-toggle-title">Interaksi Follower / Non-Follower</span>
         <div class="mode-toggle">
           <label><input type="radio" name="mf-interaksi-mode" value="COUNT" checked> Angka</label>
@@ -129,7 +146,7 @@
       </div>
     </fieldset>
 
-    <!-- ============ TAYANGAN BERDASARKAN JENIS KONTEN ============ -->
+    <!-- ============ 2. TAYANGAN BERDASARKAN JENIS KONTEN ============ -->
     <fieldset class="form-section">
       <legend>Tayangan Berdasarkan Jenis Konten</legend>
       <div class="field-grid">
@@ -154,23 +171,16 @@
       </div>
     </fieldset>
 
-    <!-- ============ KONTEN POPULAR ============ -->
+    <!-- ============ 3. KONTEN POPULAR ============ -->
     <fieldset class="form-section">
       <legend>Konten Populer</legend>
       <p class="hint">5 konten teratas — Judul, Link Instagram, dan insight (Like/Komen/Posting Ulang/Bagikan/Simpan) per konten.</p>
       <div id="mf-top-content-rows"></div>
     </fieldset>
 
-    <!-- ============ LOKASI POPULER ============ -->
+    <!-- ============ 4. INTERAKSI BERDASARKAN JENIS KONTEN ============ -->
     <fieldset class="form-section">
-      <legend>Lokasi Populer</legend>
-      <p class="hint">5 kota audiens terpopuler beserta persentasenya.</p>
-      <div id="mf-top-location-rows"></div>
-    </fieldset>
-
-    <!-- ============ ENGAGEMENT ============ -->
-    <fieldset class="form-section">
-      <legend>Engagement per Metrik</legend>
+      <legend>Interaksi Berdasarkan Jenis Konten</legend>
       <div class="field-grid four-col">
         <div>
           <span class="mode-toggle-title">Like</span>
@@ -217,7 +227,7 @@
       </div>
     </fieldset>
 
-    <!-- ============ FOLLOWER GROWTH + RENTANG USIA ============ -->
+    <!-- ============ 5. FOLLOWER GROWTH + RENTANG USIA ============ -->
     <fieldset class="form-section">
       <legend>Follower Growth &amp; Demografi</legend>
       <div class="field-grid">
@@ -275,7 +285,14 @@
       </div>
     </fieldset>
 
-    <!-- ============ JAM AKTIV ============ -->
+    <!-- ============ 6. LOKASI POPULER ============ -->
+    <fieldset class="form-section">
+      <legend>Lokasi Populer</legend>
+      <p class="hint">5 kota audiens terpopuler beserta persentasenya.</p>
+      <div id="mf-top-location-rows"></div>
+    </fieldset>
+
+    <!-- ============ 7. JAM AKTIV ============ -->
     <fieldset class="form-section">
       <legend>Jam Aktif Audiens</legend>
       <div id="mf-activity-rows"></div>
