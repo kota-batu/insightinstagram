@@ -3,33 +3,57 @@
  PROJECT      : Social Media Analytics Center
  MODULE       : Frontend - Web App
  FILE         : input-pcp.html
- VERSION      : v1.1.1
+ VERSION      : v2.0.0
  AUTHOR       : Jimmy Team (dibantu Claude)
  CREATED      : 2026-08-19
  LAST UPDATE  : 2026-08-19
 
  DESCRIPTION
  ------------------------------------------------------------------
- Halaman Khusus PCP — input persentase Pemirsa per Jenis Konten
- dan Demografi Usia+Gender untuk akun Paradise Center Point (PCP),
- dihitung otomatis oleh backend. Dipecah dari index.html v1.0.0
- (dulu tab "Khusus PCP").
+ Halaman Khusus PCP — REDESIGN TOTAL. Sebelumnya cuma berisi 2
+ section (Pemirsa & Demografi) yang harus dilengkapi lewat halaman
+ Input Manual terpisah untuk field lainnya. Sekarang satu halaman
+ utuh persis struktur Input Manual (Semua Konten, Tayangan per
+ Jenis Konten, Konten Populer, Interaksi per Jenis Konten, Follower
+ Growth & Demografi, Lokasi Populer, Jam Aktif) — semua diisi dan
+ disimpan sekali klik lewat action saveManualFull yang sama.
+
+ Satu-satunya bagian yang beda dari Input Manual biasa: "Tayangan
+ Berdasarkan Jenis Konten" diisi dalam bentuk PERSENTASE bertingkat
+ (sesuai format Instagram Insight akun PCP), dihitung otomatis di
+ browser jadi angka Follower/Non-Follower per jenis konten sebelum
+ dikirim — TIDAK LAGI lewat action savePcpReachInput/
+ savePcpAudienceInput yang lama (sheet PCP_REACH_INPUT dan
+ PCP_AUDIENCE_INPUT jadi tidak terpakai lagi, boleh dibiarkan kosong).
 
  VERSION HISTORY
  ------------------------------------------------------------------
  v1.0.0
- - Initial Release.
+ - Initial Release. 2 section (Reach & Audience), pakai action
+   savePcpReachInput/savePcpAudienceInput terpisah dari Input Manual.
 
  v1.1.0
- - Menambahkan link nav "Kelola Periode" (manage-periods.html).
+ - Menambahkan link nav "Kelola Periode".
 
- v1.1.1
- - Menambahkan query version (?v=x.x.x) di setiap <script>/<link>
-   untuk cache busting (lihat index.html v1.2.1).
+ v2.0.0 — REDESIGN TOTAL
+ - Diganti jadi form lengkap 1 halaman (7 section, sama seperti
+   Input Manual v2.2.0), account dikunci ke PCP (tidak ada dropdown
+   Account). Section Tayangan per Jenis Konten pakai rumus
+   persentase bertingkat, dihitung di browser (lihat input-pcp.js).
+ - Semua field dikirim jadi satu lewat action saveManualFull —
+   tidak perlu lagi action khusus PCP di backend.
 
  DEPENDENCIES
  ------------------------------------------------------------------
  Required : css/app.css, js/api.js, js/common.js, js/input-pcp.js
+
+ CATATAN SHEET
+ ------------------------------------------------------------------
+ Sama seperti Input Manual: sheet TOP_CONTENT butuh kolom like,
+ komen, posting_ulang, bagikan, simpan; sheet TOP_LOCATIONS harus
+ sudah dibuat (account_id, period_id, rank, location_name, percentage).
+ Sheet PCP_REACH_INPUT dan PCP_AUDIENCE_INPUT TIDAK dipakai lagi
+ sejak versi ini — boleh dibiarkan kosong, tidak perlu dihapus.
 ******************************************************************
 -->
 <!DOCTYPE html>
@@ -38,7 +62,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Khusus PCP — Social Media Analytics Center</title>
-<link rel="stylesheet" href="css/app.css?v=1.3.0">
+<link rel="stylesheet" href="css/app.css?v=1.4.0">
 </head>
 <body>
 
@@ -58,39 +82,223 @@
 
 <main>
   <section class="page">
-    <p class="hint">Khusus akun PCP (Paradise Center Point) — isi persentase, sistem hitung angka akhirnya otomatis.</p>
+
+    <p class="hint">Halaman ini khusus akun <b>PCP (Paradise Center Point)</b> — semua data satu periode diisi di sini sekaligus.</p>
     <div class="controls-bar">
       <label>Period
-        <select id="p-period"></select>
+        <select id="pf-period"></select>
       </label>
     </div>
+    <p class="hint">Angka desimal pakai titik (.), bukan koma — contoh: 80.3 bukan 80,3.</p>
 
-    <h3>Pemirsa per Jenis Konten</h3>
-    <table class="pcp-table" id="p-reach-table">
-      <thead><tr><th>Jenis Konten</th><th>% dari Total Pemirsa</th><th>% Follower</th><th>% Non-Follower</th></tr></thead>
-      <tbody>
-        <tr><td>STORY</td><td><input type="number" step="0.1" data-type="STORY" data-field="content_percent"></td><td><input type="number" step="0.1" data-type="STORY" data-field="follower_percent"></td><td><input type="number" step="0.1" data-type="STORY" data-field="nonfollower_percent"></td></tr>
-        <tr><td>REELS</td><td><input type="number" step="0.1" data-type="REELS" data-field="content_percent"></td><td><input type="number" step="0.1" data-type="REELS" data-field="follower_percent"></td><td><input type="number" step="0.1" data-type="REELS" data-field="nonfollower_percent"></td></tr>
-        <tr><td>FEED</td><td><input type="number" step="0.1" data-type="FEED" data-field="content_percent"></td><td><input type="number" step="0.1" data-type="FEED" data-field="follower_percent"></td><td><input type="number" step="0.1" data-type="FEED" data-field="nonfollower_percent"></td></tr>
-      </tbody>
-    </table>
-    <p class="hint">Catatan: isi dulu Total Pemirsa akun PCP lewat halaman Input Manual (sheet REACH_BY_TYPE, content_type=PEMIRSA, audience_type=TOTAL) sebelum simpan tabel ini.</p>
-    <button id="p-save-reach" class="btn-secondary">Hitung &amp; Simpan Pemirsa</button>
+    <!-- ============ 1. SEMUA KONTEN ============ -->
+    <fieldset class="form-section">
+      <legend>Semua Konten</legend>
 
-    <h3>Demografi Usia + Gender</h3>
-    <table class="pcp-table" id="p-audience-table">
-      <thead><tr><th>Gender</th><th>% Gender</th><th>Rentang Usia</th><th>% Usia dalam Gender</th></tr></thead>
-      <tbody id="p-audience-rows"></tbody>
-    </table>
-    <p class="hint">Catatan: isi dulu Total Follower akun PCP lewat halaman Input Manual (sheet FOLLOWER_GROWTH) sebelum simpan tabel ini.</p>
-    <button id="p-save-audience" class="btn-secondary">Hitung &amp; Simpan Demografi</button>
+      <div class="mode-toggle-block">
+        <div class="field-grid">
+          <label>Tayangan<input type="number" id="pf-tayangan"></label>
+        </div>
+        <span class="mode-toggle-title">Reach Follower / Non-Follower</span>
+        <div class="mode-toggle">
+          <label><input type="radio" name="pf-reach-mode" value="COUNT" checked> Angka</label>
+          <label><input type="radio" name="pf-reach-mode" value="PERCENT"> Persentase (% dari Tayangan)</label>
+        </div>
+        <div class="field-grid">
+          <label>Follower<input type="number" step="0.01" id="pf-reach-follower"></label>
+          <label>Non-Follower<input type="number" step="0.01" id="pf-reach-nonfollower"></label>
+        </div>
+      </div>
 
-    <div id="p-status" class="status-msg"></div>
+      <div class="field-grid">
+        <label>Pengikut Bersih<input type="number" id="pf-pengikut-bersih"></label>
+        <label>Follower Baru<input type="number" id="pf-follower-baru"></label>
+        <label>Unfollow<input type="number" id="pf-unfollow"></label>
+      </div>
+
+      <div class="mode-toggle-block">
+        <div class="field-grid">
+          <label>Interaksi<input type="number" id="pf-interaksi"></label>
+        </div>
+        <span class="mode-toggle-title">Interaksi Follower / Non-Follower</span>
+        <div class="mode-toggle">
+          <label><input type="radio" name="pf-interaksi-mode" value="COUNT" checked> Angka</label>
+          <label><input type="radio" name="pf-interaksi-mode" value="PERCENT"> Persentase (% dari Interaksi)</label>
+        </div>
+        <div class="field-grid">
+          <label>Follower<input type="number" step="0.01" id="pf-interaksi-follower"></label>
+          <label>Non-Follower<input type="number" step="0.01" id="pf-interaksi-nonfollower"></label>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ============ 2. TAYANGAN BERDASARKAN JENIS KONTEN (RUMUS PCP) ============ -->
+    <fieldset class="form-section">
+      <legend>Tayangan Berdasarkan Jenis Konten</legend>
+      <div class="field-grid">
+        <label>Pemirsa (Total)<input type="number" id="pf-pemirsa"></label>
+      </div>
+      <p class="hint">Isi persentase persis seperti tampilan Instagram Insight PCP. Sistem otomatis hitung: Total Pemirsa × % Jenis Konten → Pemirsa Jenis Konten, lalu × % Follower/Non-Follower → angka akhir.</p>
+      <div class="field-grid three-col">
+        <div>
+          <span class="mode-toggle-title">Story</span>
+          <label>% dari Total Pemirsa<input type="number" step="0.01" id="pf-story-content-percent"></label>
+          <label>% Follower<input type="number" step="0.01" id="pf-story-follower-percent"></label>
+          <label>% Non-Follower<input type="number" step="0.01" id="pf-story-nonfollower-percent"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Reels</span>
+          <label>% dari Total Pemirsa<input type="number" step="0.01" id="pf-reels-content-percent"></label>
+          <label>% Follower<input type="number" step="0.01" id="pf-reels-follower-percent"></label>
+          <label>% Non-Follower<input type="number" step="0.01" id="pf-reels-nonfollower-percent"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Feed</span>
+          <label>% dari Total Pemirsa<input type="number" step="0.01" id="pf-feed-content-percent"></label>
+          <label>% Follower<input type="number" step="0.01" id="pf-feed-follower-percent"></label>
+          <label>% Non-Follower<input type="number" step="0.01" id="pf-feed-nonfollower-percent"></label>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ============ 3. KONTEN POPULAR ============ -->
+    <fieldset class="form-section">
+      <legend>Konten Populer</legend>
+      <p class="hint">5 konten teratas — Judul, Link Instagram, dan insight (Like/Komen/Posting Ulang/Bagikan/Simpan) per konten.</p>
+      <div id="pf-top-content-rows"></div>
+    </fieldset>
+
+    <!-- ============ 4. INTERAKSI BERDASARKAN JENIS KONTEN ============ -->
+    <fieldset class="form-section">
+      <legend>Interaksi Berdasarkan Jenis Konten</legend>
+      <div class="field-grid four-col">
+        <div>
+          <span class="mode-toggle-title">Like</span>
+          <label>Reel<input type="number" id="pf-eng-reels-like"></label>
+          <label>Feed<input type="number" id="pf-eng-feed-like"></label>
+          <label>Story<input type="number" id="pf-eng-story-like"></label>
+          <label>Siaran Langsung<input type="number" id="pf-eng-live-like"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Komentar</span>
+          <label>Reel<input type="number" id="pf-eng-reels-komen"></label>
+          <label>Feed<input type="number" id="pf-eng-feed-komen"></label>
+          <label>Story<input type="number" id="pf-eng-story-komen"></label>
+          <label>Siaran Langsung<input type="number" id="pf-eng-live-komen"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Posting Ulang</span>
+          <label>Reel<input type="number" id="pf-eng-reels-posting_ulang"></label>
+          <label>Feed<input type="number" id="pf-eng-feed-posting_ulang"></label>
+          <label>Story<input type="number" id="pf-eng-story-posting_ulang"></label>
+          <label>Siaran Langsung<input type="number" id="pf-eng-live-posting_ulang"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Bagikan</span>
+          <label>Reel<input type="number" id="pf-eng-reels-bagikan"></label>
+          <label>Feed<input type="number" id="pf-eng-feed-bagikan"></label>
+          <label>Story<input type="number" id="pf-eng-story-bagikan"></label>
+          <label>Siaran Langsung<input type="number" id="pf-eng-live-bagikan"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Simpan</span>
+          <label>Reel<input type="number" id="pf-eng-reels-simpan"></label>
+          <label>Feed<input type="number" id="pf-eng-feed-simpan"></label>
+          <label>Story<input type="number" id="pf-eng-story-simpan"></label>
+          <label>Siaran Langsung<input type="number" id="pf-eng-live-simpan"></label>
+        </div>
+        <div>
+          <span class="mode-toggle-title">Balasan</span>
+          <label>Reel<input type="number" id="pf-eng-reels-balasan"></label>
+          <label>Feed<input type="number" id="pf-eng-feed-balasan"></label>
+          <label>Story<input type="number" id="pf-eng-story-balasan"></label>
+          <label>Siaran Langsung<input type="number" id="pf-eng-live-balasan"></label>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ============ 5. FOLLOWER GROWTH + RENTANG USIA ============ -->
+    <fieldset class="form-section">
+      <legend>Follower Growth &amp; Demografi</legend>
+      <div class="field-grid">
+        <label>Pertumbuhan Follower (%)<input type="number" step="0.01" id="pf-growth-percent"></label>
+        <label>Total Follower<input type="number" id="pf-total-follower"></label>
+      </div>
+
+      <div class="mode-toggle-block">
+        <span class="mode-toggle-title">Gender &amp; Rentang Usia</span>
+        <div class="mode-toggle">
+          <label><input type="radio" name="pf-gender-mode" value="COUNT"> Angka</label>
+          <label><input type="radio" name="pf-gender-mode" value="PERCENT" checked> Persentase (% dari Total Follower / % dalam gender)</label>
+        </div>
+        <div class="field-grid">
+          <label>Wanita<input type="number" step="0.01" id="pf-wanita"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-lakilaki"></label>
+        </div>
+
+        <span class="mode-toggle-title">Rentang Usia (Wanita &amp; Laki-laki bersebelahan)</span>
+        <div class="age-row">
+          <span class="age-row-label">13-17</span>
+          <label>Wanita<input type="number" step="0.01" id="pf-age-wanita-13-17"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-age-pria-13-17"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">18-24</span>
+          <label>Wanita<input type="number" step="0.01" id="pf-age-wanita-18-24"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-age-pria-18-24"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">25-34</span>
+          <label>Wanita<input type="number" step="0.01" id="pf-age-wanita-25-34"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-age-pria-25-34"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">35-44</span>
+          <label>Wanita<input type="number" step="0.01" id="pf-age-wanita-35-44"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-age-pria-35-44"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">45-54</span>
+          <label>Wanita<input type="number" step="0.01" id="pf-age-wanita-45-54"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-age-pria-45-54"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">55-63</span>
+          <label>Wanita<input type="number" step="0.01" id="pf-age-wanita-55-63"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-age-pria-55-63"></label>
+        </div>
+        <div class="age-row">
+          <span class="age-row-label">65 UP</span>
+          <label>Wanita<input type="number" step="0.01" id="pf-age-wanita-65-up"></label>
+          <label>Laki-laki<input type="number" step="0.01" id="pf-age-pria-65-up"></label>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ============ 6. LOKASI POPULER ============ -->
+    <fieldset class="form-section">
+      <legend>Lokasi Populer</legend>
+      <p class="hint">5 kota audiens terpopuler beserta persentasenya.</p>
+      <div id="pf-top-location-rows"></div>
+    </fieldset>
+
+    <!-- ============ 7. JAM AKTIV ============ -->
+    <fieldset class="form-section">
+      <legend>Jam Aktif Audiens</legend>
+      <div id="pf-activity-rows"></div>
+      <button id="pf-activity-add" type="button" class="btn-secondary">+ Tambah Jam</button>
+    </fieldset>
+
+    <div class="button-row">
+      <button id="pf-save" class="btn-primary">Simpan Semua</button>
+    </div>
+    <div id="pf-status" class="status-msg"></div>
+
   </section>
 </main>
 
 <script src="js/api.js?v=1.0.2"></script>
 <script src="js/common.js?v=1.1.0"></script>
-<script src="js/input-pcp.js?v=1.1.0"></script>
+<script src="js/input-pcp.js?v=2.0.0"></script>
 </body>
 </html>
