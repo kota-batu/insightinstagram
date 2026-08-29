@@ -2,7 +2,7 @@
  * PROJECT      : Social Media Analytics Center
  * MODULE       : Frontend - Web App
  * FILE         : app.css
- * VERSION      : v1.3.0
+ * VERSION      : v1.4.0
  * AUTHOR       : Jimmy Team (dibantu Claude)
  * CREATED      : 2026-08-18
  * LAST UPDATE  : 2026-08-19
@@ -38,8 +38,12 @@
  * - Ditambahkan .age-row/.age-row-label untuk layout Rentang Usia
  *   satu baris per rentang (Wanita+Laki-laki bersebelahan).
  * - Ditambahkan .top-location-row untuk section Lokasi Populer.
- * - .field-grid.four-col dipakai ulang untuk grouping Engagement
- *   per-metrik (sebelumnya per jenis konten) — tidak perlu style baru.
+ *
+ * v1.4.0
+ * - .mode-toggle-block:first-child dalam .form-section tidak lagi
+ *   pakai border-top/margin-top, supaya blok pertama sebuah
+ *   section (misal Tayangan+Reach di Semua Konten) tidak dobel
+ *   garis pemisah dengan legend di atasnya.
  ******************************************************************/
 
 /******************************************************************
@@ -288,6 +292,11 @@ table.pcp-table input { width: 100%; }
   border-top: 1px dashed var(--border);
   padding-top: 12px;
   margin-top: 12px;
+}
+.form-section .mode-toggle-block:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
 }
 .mode-toggle-title {
   display: block;
